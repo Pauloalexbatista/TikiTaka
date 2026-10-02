@@ -1,0 +1,18 @@
+{
+  "name": "tiki-taka-simulator",
+  "version": "1.0.0",
+  "description": "Tiki-Taka Football Manager Simulator",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sim": "node src/simulate_cli.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
