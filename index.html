@@ -6,6 +6,22 @@
   <title>Tiki-Taka WebApp: Campeonato & Simulador Tático</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html {
+      overflow-x: hidden;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
     @keyframes goal-shake {
       0%, 100% { transform: translateY(0); }
       20%, 60% { transform: translateY(-4px) scale(1.01); }
@@ -26,18 +42,18 @@
   </style>
 </head>
 
+<body class="bg-[var(--background,#070d17)] text-[var(--foreground,#f1f5f9)] font-sans p-2 sm:p-3 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
   <!-- Toast de Notificação de Gravação -->
-  <div id="save-toast" class="fixed top-4 right-4 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-2.5 rounded-xl bg-emerald-950/95 border border-emerald-500/60 text-emerald-300 text-xs font-bold shadow-2xl flex items-center gap-2">
+  <div id="save-toast" class="fixed top-4 right-4 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-3.5 py-2 rounded-xl bg-emerald-950/95 border border-emerald-500/60 text-emerald-300 text-xs font-bold shadow-2xl flex items-center gap-2">
     <span class="text-base">💾</span>
     <span id="save-toast-text">Jogo Gravado com Sucesso!</span>
   </div>
 
-<body class="bg-[var(--background,#070d17)] text-[var(--foreground,#f1f5f9)] font-sans p-2 sm:p-3 min-h-screen flex flex-col justify-between">
-
-  <div class="max-w-7xl mx-auto w-full space-y-2.5">
+  <div class="max-w-7xl mx-auto w-full min-w-0 max-w-full space-y-2.5 overflow-x-hidden">
     
     <!-- 1. BARRA SUPERIOR DO CLUBE & MENU DE NAVEGAÇÃO POR ABAS -->
-    <header class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl px-3 py-2.5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-3">
+    <header class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-3 min-w-0 max-w-full">
       
       <!-- Identidade do Clube -->
       <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
@@ -65,8 +81,8 @@
 
       <!-- Abas de Navegação -->
       <!-- Abas de Navegação e Ações Rápidas (Estilo STRIKER) -->
-      <div class="flex items-center gap-2 flex-wrap md:flex-nowrap w-full md:w-auto justify-between md:justify-end">
-        <nav class="flex items-center gap-1 bg-black/40 p-1.5 rounded-xl border border-white/10 overflow-x-auto custom-scroll text-xs font-bold shrink-0">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto min-w-0 max-w-full justify-between md:justify-end">
+        <nav class="w-full sm:w-auto flex items-center gap-1 bg-black/40 p-1.5 rounded-xl border border-white/10 overflow-x-auto custom-scroll text-xs font-bold min-w-0 max-w-full">
         <button onclick="switchTab('league')" id="tab-btn-league" class="px-3 py-2 rounded-lg bg-emerald-600 text-white flex items-center gap-1.5 transition whitespace-nowrap shadow">
           <span>🏆 Campeonato</span>
         </button>
@@ -92,6 +108,11 @@
           <button onclick="saveCurrentGame(true)" class="px-2.5 py-2 bg-indigo-600/30 hover:bg-indigo-600 active:scale-95 text-indigo-200 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/30 transition flex items-center gap-1.5 shadow" title="Gravar Jogo no Navegador">
             <span>💾</span>
             <span class="hidden sm:inline">Gravar</span>
+          </button>
+
+          <button onclick="exportSaveToFile()" class="px-2.5 py-2 bg-emerald-600/30 hover:bg-emerald-600 active:scale-95 text-emerald-200 hover:text-white rounded-xl text-xs font-bold border border-emerald-500/30 transition flex items-center gap-1.5 shadow" title="Exportar Cópia de Segurança (.json)">
+            <span>📤</span>
+            <span class="hidden sm:inline">Backup</span>
           </button>
 
           <button onclick="openLeaguesModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-600/30 to-amber-500/20 hover:from-amber-600 hover:to-amber-500 active:scale-95 text-amber-200 hover:text-white rounded-xl text-xs font-bold border border-amber-500/40 transition flex items-center gap-2 shadow" title="Clique para Gerir, Criar ou Mudar de Campeonato">
@@ -135,11 +156,11 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-          <button onclick="startMatchView()" class="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2">
-            <span>⚽ Jogar no Relvado Tático</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center justify-end">
+          <button onclick="startMatchView()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+            <span>⚽ Jogar no Relvado</span>
           </button>
-          <button onclick="simulateCurrentRoundInstantly()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shrink-0" title="Simular a jornada completa em 1 segundo">
+          <button onclick="simulateCurrentRoundInstantly()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5" title="Simular a jornada completa em 1 segundo">
             <span>⚡ Simulação Rápida</span>
           </button>
         </div>
@@ -149,16 +170,19 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
         
         <!-- Tabela Classificativa a 12 Equipas (7 Colunas em Desktop) -->
-        <div class="lg:col-span-7 bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl p-3.5 shadow-xl">
+        <div class="lg:col-span-7 bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl p-3 sm:p-3.5 shadow-xl min-w-0 max-w-full overflow-hidden">
           <div class="flex items-center justify-between pb-2.5 mb-2 border-b border-white/10">
             <h2 class="text-sm font-black text-white flex items-center gap-2">
               <span>🏆 Tabela da Liga (12 Equipas)</span>
             </h2>
-            <span class="text-[11px] text-slate-400 font-mono">22 Jornadas (Berger)</span>
+            <div class="flex items-center gap-2">
+              <span class="sm:hidden text-[9px] text-emerald-400 font-mono font-bold animate-pulse">Desliza 👉</span>
+              <span class="text-[11px] text-slate-400 font-mono">22 Jornadas</span>
+            </div>
           </div>
 
-          <div class="overflow-x-auto custom-scroll">
-            <table class="w-full text-left text-xs">
+          <div class="overflow-x-auto custom-scroll min-w-0 max-w-full">
+            <table class="w-full min-w-[460px] text-left text-xs">
               <thead>
                 <tr class="text-[10px] text-slate-400 uppercase font-mono border-b border-white/5">
                   <th class="py-2 px-1 text-center">#</th>
@@ -212,12 +236,12 @@
     <!-- ========================================== -->
     <!-- ABA 2: O RELVADO TÁTICO & DIA DE JOGO     -->
     <!-- ========================================== -->
-    <main id="view-match" class="space-y-2.5 hidden">
+    <main id="view-match" class="space-y-2.5 hidden min-w-0 max-w-full">
       
       <!-- Placar & Estatísticas da Partida -->
-      <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-xl shadow px-3 py-2 flex flex-col gap-1.5">
+      <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-xl shadow px-2 sm:px-3 py-2 flex flex-col gap-1.5 min-w-0 max-w-full">
         
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center justify-between gap-1 sm:gap-2 min-w-0 max-w-full">
           <!-- Equipa da Casa -->
           <div class="flex items-center gap-2 min-w-0 flex-1 justify-start">
             <div id="match-badge-home" class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow border border-white/20 shrink-0 text-white" style="background-color: #10b981;">
@@ -260,7 +284,7 @@
         </div>
 
         <!-- Estatísticas Integradas -->
-        <div class="pt-1 border-t border-white/5 grid grid-cols-4 gap-2 text-center text-[10px] sm:text-xs font-mono">
+        <div class="pt-1 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px] sm:text-xs font-mono">
           <div class="bg-black/25 rounded px-2 py-0.5 border border-white/5 flex items-center justify-center gap-1.5">
             <span class="text-slate-400 font-sans">Remates:</span>
             <span id="stat-shots-home" class="font-bold text-emerald-400">0</span>
@@ -294,7 +318,7 @@
         
         <!-- Campo de Futebol -->
         <div class="lg:col-span-8 bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-xl p-2.5 shadow flex flex-col justify-between">
-          <div class="flex items-center justify-between text-[11px] mb-1.5 px-1">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] mb-1.5 px-1 flex-wrap gap-1">
             <div class="flex items-center gap-2">
               <span class="font-bold text-slate-300">🏟️ Relvado Tático</span>
               <span id="side-indicator-badge" class="text-[9px] bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.2 rounded font-mono">
@@ -520,7 +544,7 @@
 
 
         <!-- Estatísticas Rápidas do Plantel -->
-        <div class="flex items-center justify-between text-xs font-mono bg-black/20 p-2.5 rounded-xl border border-white/5">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono bg-black/20 p-2.5 rounded-xl border border-white/5">
           <div class="flex items-center gap-3">
             <span>Total: <strong id="squad-total-count" class="text-white">20 Atletas</strong></span>
             <span>•</span>
@@ -591,7 +615,7 @@
         </div>
 
         <!-- Filtros por Posição -->
-        <div class="flex items-center gap-1 bg-black/30 p-1.5 rounded-xl border border-white/5 text-xs font-bold">
+        <div class="flex items-center gap-1 bg-black/30 p-1.5 rounded-xl border border-white/5 text-xs font-bold overflow-x-auto custom-scroll max-w-full shrink-0">
           <span class="text-slate-400 px-2 text-[10px] uppercase font-mono">Filtrar:</span>
           <button onclick="setMarketFilter('ALL')" id="mfilter-ALL" class="px-3 py-1 rounded-lg bg-emerald-600 text-white shadow">Todos (12)</button>
           <button onclick="setMarketFilter('GR')" id="mfilter-GR" class="px-3 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/5">Guarda-Redes (GR)</button>
@@ -642,21 +666,21 @@
         <div class="space-y-3.5 text-xs">
           <div>
             <label class="block text-slate-300 font-bold mb-1">Nome do Teu Clube:</label>
-            <input type="text" id="input-club-name" value="Lusitano Ginásio" class="w-full bg-black/40 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:border-emerald-500 outline-none">
+            <input type="text" id="input-club-name" placeholder="Nome do Teu Clube" class="w-full bg-black/40 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:border-emerald-500 outline-none">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-300 font-bold mb-1">Cor Primária (Casa):</label>
               <div class="flex items-center gap-2">
-                <input type="color" id="input-color-primary" value="#10b981" class="w-10 h-10 rounded-xl bg-transparent border-0 cursor-pointer">
+                <input type="color" id="input-color-primary" value="#10b981" oninput="onClubColorChange()" class="w-10 h-10 rounded-xl bg-transparent border-0 cursor-pointer">
                 <span id="label-color-primary" class="font-mono text-slate-400">#10b981</span>
               </div>
             </div>
             <div>
               <label class="block text-slate-300 font-bold mb-1">Cor Secundária (Fora):</label>
               <div class="flex items-center gap-2">
-                <input type="color" id="input-color-secondary" value="#0f172a" class="w-10 h-10 rounded-xl bg-transparent border-0 cursor-pointer">
+                <input type="color" id="input-color-secondary" value="#0f172a" oninput="onClubColorChange()" class="w-10 h-10 rounded-xl bg-transparent border-0 cursor-pointer">
                 <span id="label-color-secondary" class="font-mono text-slate-400">#0f172a</span>
               </div>
             </div>
@@ -1031,6 +1055,123 @@
       }
     }
 
+    // ==========================================
+    // PONTO 5: BACKUP, EXPORT & IMPORT DE SAVES
+    // ==========================================
+    function exportSaveToFile() {
+      saveCurrentGame(false);
+      try {
+        const backupData = {
+          app: "Tiki-Taka Manager Simulator",
+          version: "2.0.0",
+          exportedAt: new Date().toISOString(),
+          activeLeagueId: activeLeagueId,
+          userLeagues: userLeagues
+        };
+
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `tikitaka_save_${dateStr}_${Date.now().toString().slice(-4)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showSaveToast("📥 Save Exportado com Sucesso!");
+      } catch (err) {
+        console.error("Erro ao exportar save:", err);
+        alert("Erro ao exportar cópia de segurança: " + err.message);
+      }
+    }
+
+    function triggerImportSaveDialog() {
+      const input = document.getElementById('import-save-file-input');
+      if (input) input.click();
+    }
+
+    function handleImportSaveFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!parsed.userLeagues || !Array.isArray(parsed.userLeagues)) {
+            alert("⚠️ O ficheiro selecionado não é um ficheiro de savegame válido do Tiki-Taka!");
+            return;
+          }
+
+          if (confirm(`Queres restaurar esta cópia de segurança com ${parsed.userLeagues.length} campeonato(s)?\n\n(Data da gravação: ${new Date(parsed.exportedAt || Date.now()).toLocaleString()})`)) {
+            userLeagues = parsed.userLeagues;
+            activeLeagueId = parsed.activeLeagueId || (userLeagues[0] ? userLeagues[0].id : null);
+
+            const activeObj = userLeagues.find(l => l.id === activeLeagueId) || userLeagues[0];
+            if (activeObj && activeObj.leagueState) {
+              activeLeagueId = activeObj.id;
+              leagueState = activeObj.leagueState;
+            }
+
+            saveCurrentGame(false);
+            updateTopLeagueNameBadge();
+            updateAllLeagueUIs();
+            showSaveToast("✅ Save Restaurado com Sucesso!");
+            showLeagueModalAlert("✅ Cópia de segurança restaurada com sucesso!", "emerald");
+          }
+        } catch (err) {
+          console.error("Erro ao importar save:", err);
+          alert("Erro ao processar ficheiro de save: " + err.message);
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function syncActiveLeagueWithVPS(showToast = false) {
+      const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
+      if (!currentLeagueObj || !currentLeagueObj.code) return;
+
+      if (!window.location.protocol.startsWith('http')) {
+        if (showToast) showSaveToast("ℹ️ Sincronização direta na VPS requer ligação HTTP.");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`/api/leagues/${encodeURIComponent(currentLeagueObj.code)}/state`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.leagueState) {
+            const myUserClubId = leagueState.userClubId;
+            leagueState.fixtures = data.leagueState.fixtures;
+            leagueState.clubs = data.leagueState.clubs;
+            leagueState.season = data.leagueState.season;
+            leagueState.currentRound = data.leagueState.currentRound;
+            leagueState.userClubId = myUserClubId;
+
+            if (data.claimedClubs) {
+              currentLeagueObj.claimedClubs = data.claimedClubs;
+            }
+
+            saveCurrentGame(false);
+            updateLeagueTableUI();
+            renderCurrentRoundUI();
+            if (showToast) showSaveToast("🔄 Liga Sincronizada com a VPS!");
+          }
+        } else {
+          if (showToast) showSaveToast("⚠️ Não foi possível sincronizar com a VPS.");
+        }
+      } catch (err) {
+        console.warn("Erro ao sincronizar com VPS:", err);
+        if (showToast) showSaveToast("⚠️ Erro de ligação à VPS.");
+      }
+    }
+
     function saveCurrentGame(showToast = false) {
       if (!activeLeagueId) return;
 
@@ -1041,6 +1182,7 @@
         userLeagues[lIdx].leagueState = JSON.parse(JSON.stringify(leagueState));
         userLeagues[lIdx].userClubName = userClub ? userClub.name : 'Lusitano Ginásio';
         userLeagues[lIdx].userClubShort = userClub ? userClub.short : 'LUS';
+        userLeagues[lIdx].userClubId = leagueState.userClubId;
         userLeagues[lIdx].season = leagueState.season;
         userLeagues[lIdx].currentRound = leagueState.currentRound;
         userLeagues[lIdx].lastSavedAt = new Date().toISOString();
@@ -1055,6 +1197,18 @@
       } catch (err) {
         console.error("Erro ao gravar jogo no localStorage:", err);
       }
+
+      const activeObj = userLeagues.find(l => l.id === activeLeagueId);
+      if (activeObj && activeObj.code && window.location.protocol.startsWith('http')) {
+        fetch(`/api/leagues/${encodeURIComponent(activeObj.code)}/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            password: activeObj.password,
+            leagueState: leagueState
+          })
+        }).catch(() => {});
+      }
     }
 
     function generateRandomLeagueCode() {
@@ -1066,59 +1220,130 @@
       return code;
     }
 
+    function setActiveLeague(leagueId) {
+      const leagueObj = userLeagues.find(l => l.id === leagueId) || userLeagues[0];
+      if (!leagueObj) return;
+
+      activeLeagueId = leagueObj.id;
+      try {
+        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+      } catch(e) {}
+
+      if (leagueObj.leagueState) {
+        leagueState = leagueObj.leagueState;
+        if (leagueObj.userClubId) {
+          leagueState.userClubId = leagueObj.userClubId;
+        }
+        if (leagueObj.userClubName) {
+          const c = leagueState.clubs ? leagueState.clubs.find(x => x.id === leagueState.userClubId) : null;
+          if (c) c.name = leagueObj.userClubName;
+        }
+      }
+    }
+
+    function setupDefaultInitialLeague() {
+      const initialCode = "TIKI-OFICIAL";
+      const freshState = createFreshLeagueState("Lusitano Ginásio", "lusitano");
+      const defaultLeague = {
+        id: 'league_' + Date.now(),
+        name: 'Liga Principal Tiki-Taka',
+        code: initialCode,
+        password: '123',
+        isCreator: true,
+        creatorName: 'Treinador Principal',
+        isDefaultInitial: true,
+        createdAt: new Date().toISOString(),
+        lastSavedAt: new Date().toISOString(),
+        userClubName: 'Lusitano Ginásio',
+        userClubShort: 'LUS',
+        userClubId: 'lusitano',
+        season: 1,
+        currentRound: 1,
+        claimedClubs: {
+          lusitano: { managerName: 'Treinador Principal', isCreator: true }
+        },
+        leagueState: freshState
+      };
+      userLeagues = [defaultLeague];
+      activeLeagueId = defaultLeague.id;
+      leagueState = freshState;
+
+      try {
+        localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
+        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+      } catch(e) {}
+    }
+
     function loadMultiLeaguesSystem() {
       try {
         const storedLeagues = localStorage.getItem(STORAGE_LEAGUES_KEY);
         const storedActiveId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
 
         if (storedLeagues) {
-          userLeagues = JSON.parse(storedLeagues);
-        }
-
-        if (!userLeagues || userLeagues.length === 0) {
-          // Criar a Liga Inicial padrão com o estado corrente do jogo
-          const initialCode = "TIKI-OFICIAL";
-          const defaultLeague = {
-            id: 'league_' + Date.now(),
-            name: 'Liga Principal Tiki-Taka',
-            code: initialCode,
-            password: '123',
-            isCreator: true,
-            createdAt: new Date().toISOString(),
-            lastSavedAt: new Date().toISOString(),
-            userClubName: 'Lusitano Ginásio',
-            userClubShort: 'LUS',
-            season: leagueState.season,
-            currentRound: leagueState.currentRound,
-            leagueState: JSON.parse(JSON.stringify(leagueState))
-          };
-          userLeagues = [defaultLeague];
-          activeLeagueId = defaultLeague.id;
-          saveCurrentGame(false);
-        } else {
-          // Selecionar a liga guardada ativa ou a primeira
-          activeLeagueId = storedActiveId && userLeagues.some(l => l.id === storedActiveId) 
-            ? storedActiveId 
-            : userLeagues[0].id;
-          
-          const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
-          if (currentLeagueObj && currentLeagueObj.leagueState) {
-            leagueState = currentLeagueObj.leagueState;
+          try {
+            const parsed = JSON.parse(storedLeagues);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              userLeagues = parsed;
+            }
+          } catch (e) {
+            userLeagues = [];
           }
         }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const inviteCode = urlParams.get('liga') || urlParams.get('convite');
+        const invitePass = urlParams.get('pass') || urlParams.get('senha') || '';
+
+        // Se veio por link de convite (?liga=CODIGO):
+        if (inviteCode) {
+          if (!userLeagues || userLeagues.length === 0) {
+            setupDefaultInitialLeague();
+          } else {
+            const activeId = (storedActiveId && userLeagues.some(l => l.id === storedActiveId))
+              ? storedActiveId
+              : userLeagues[0].id;
+            setActiveLeague(activeId);
+          }
+          updateTopLeagueNameBadge();
+          updateAllLeagueUIs();
+          setTimeout(() => {
+            openJoinLeagueView(inviteCode.toUpperCase(), invitePass);
+          }, 350);
+          return;
+        }
+
+        // Se NÃO há campeonatos guardados:
+        if (!userLeagues || userLeagues.length === 0) {
+          setupDefaultInitialLeague();
+          updateTopLeagueNameBadge();
+          updateAllLeagueUIs();
+
+          setTimeout(() => {
+            openLeaguesModal();
+            showLeagueModalAlert("👋 Bem-vindo ao Tiki-Taka! Cria a tua equipa ou entra num campeonato.", "emerald");
+          }, 350);
+          return;
+        }
+
+        // Se existem campeonatos guardados:
+        const activeIdToUse = (storedActiveId && userLeagues.some(l => l.id === storedActiveId))
+          ? storedActiveId 
+          : userLeagues[userLeagues.length - 1].id;
+
+        setActiveLeague(activeIdToUse);
+        updateTopLeagueNameBadge();
+        updateAllLeagueUIs();
+        populateClubCustomUI();
+
+        // Se o utilizador tem mais de 1 campeonato, abre o menu para escolher onde quer jogar
+        if (userLeagues.length > 1) {
+          setTimeout(() => {
+            openLeaguesModal();
+          }, 300);
+        }
+
       } catch (err) {
         console.error("Erro ao carregar sistema de ligas:", err);
-      }
-
-      updateTopLeagueNameBadge();
-
-      // Verificar se o utilizador abriu através de um link com código de convite: ?liga=CODIGO
-      const urlParams = new URLSearchParams(window.location.search);
-      const inviteCode = urlParams.get('liga') || urlParams.get('convite');
-      if (inviteCode) {
-        setTimeout(() => {
-          openJoinLeagueView(inviteCode.toUpperCase());
-        }, 300);
       }
     }
 
@@ -1141,9 +1366,9 @@
 
     function showLeaguesListView() {
       const titleEl = document.getElementById('league-modal-title');
-      if (titleEl) titleEl.innerText = "Os Teus Campeonatos";
+      if (titleEl) titleEl.innerText = "🏆 Os Teus Campeonatos";
       const subEl = document.getElementById('league-modal-subtitle');
-      if (subEl) subEl.innerText = "Gere as tuas ligas e convida amigos (Estilo STRIKER)";
+      if (subEl) subEl.innerText = "Em qual campeonato queres entrar? Escolhe abaixo para jogar ou cria um novo.";
       
       const vList = document.getElementById('league-view-list');
       if (vList) vList.classList.remove('hidden');
@@ -1156,6 +1381,16 @@
       renderLeaguesListUI();
     }
 
+    function updateCreateClubDefaultName() {
+      const sel = document.getElementById('select-create-league-club');
+      const input = document.getElementById('input-create-league-club');
+      if (!sel || !input) return;
+      const cObj = DEFAULT_CLUBS_DATA.find(c => c.id === sel.value);
+      if (cObj) {
+        input.value = cObj.name;
+      }
+    }
+
     function openCreateLeagueView() {
       const createdCount = userLeagues.filter(l => l.isCreator).length;
       if (createdCount >= 3) {
@@ -1166,13 +1401,16 @@
       const titleEl = document.getElementById('league-modal-title');
       if (titleEl) titleEl.innerText = "Criar Novo Campeonato";
       const subEl = document.getElementById('league-modal-subtitle');
-      if (subEl) subEl.innerText = "Define o nome, código e palavra-passe para os teus amigos entrarem";
+      if (subEl) subEl.innerText = "Define o nome, código, senha e escolhe a tua equipa";
+
       document.getElementById('input-create-league-name').value = "";
       document.getElementById('input-create-league-code').value = generateRandomLeagueCode();
       document.getElementById('input-create-league-password').value = "";
+      document.getElementById('input-create-league-manager').value = "";
       
-      const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
-      document.getElementById('input-create-league-club').value = userClub ? userClub.name : "Lusitano Ginásio";
+      const selectClub = document.getElementById('select-create-league-club');
+      if (selectClub) selectClub.value = "lusitano";
+      updateCreateClubDefaultName();
 
       document.getElementById('league-view-list').classList.add('hidden');
       document.getElementById('league-view-create').classList.remove('hidden');
@@ -1180,14 +1418,23 @@
       hideLeagueModalAlert();
     }
 
-    function openJoinLeagueView(prefilledCode = '') {
+    let currentJoinLeagueData = null;
+    let selectedJoinClubId = null;
+
+    function openJoinLeagueView(prefilledCode = '', prefilledPass = '') {
       const titleEl = document.getElementById('league-modal-title');
-      if (titleEl) titleEl.innerText = "Entrar com Código & Password";
+      if (titleEl) titleEl.innerText = "Entrar com Código & Escolher Equipa";
       const subEl = document.getElementById('league-modal-subtitle');
-      if (subEl) subEl.innerText = "Insere o código de convite e a senha que o teu amigo partilhou no WhatsApp";
+      if (subEl) subEl.innerText = "Insere o código de convite, valida a senha e escolhe uma equipa disponível";
+
       document.getElementById('input-join-league-code').value = prefilledCode;
-      document.getElementById('input-join-league-password').value = "";
-      document.getElementById('input-join-league-club').value = "Clube dos Amigos";
+      document.getElementById('input-join-league-password').value = prefilledPass;
+      document.getElementById('input-join-manager-name').value = "";
+      document.getElementById('input-join-league-club').value = "";
+
+      document.getElementById('join-step-team-selection').classList.add('hidden');
+      selectedJoinClubId = null;
+      currentJoinLeagueData = null;
 
       document.getElementById('league-view-list').classList.add('hidden');
       document.getElementById('league-view-create').classList.add('hidden');
@@ -1195,6 +1442,176 @@
       hideLeagueModalAlert();
 
       document.getElementById('leagues-modal').classList.remove('hidden');
+
+      if (prefilledCode && prefilledPass) {
+        checkLeagueBeforeJoin();
+      }
+    }
+
+    async function checkLeagueBeforeJoin() {
+      const codeInput = document.getElementById('input-join-league-code').value.trim().toUpperCase();
+      const passwordInput = document.getElementById('input-join-league-password').value.trim();
+
+      if (!codeInput) {
+        showLeagueModalAlert("⚠️ Insere o Código de Convite da Liga!", "rose");
+        return;
+      }
+
+      hideLeagueModalAlert();
+      let leagueData = null;
+
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          const resp = await fetch(`/api/leagues/${encodeURIComponent(codeInput)}`);
+          if (resp.ok) {
+            leagueData = await resp.json();
+          } else {
+            const errData = await resp.json();
+            showLeagueModalAlert(errData.error || "Liga não encontrada no servidor da VPS.", "rose");
+            return;
+          }
+        } catch (e) {
+          console.warn("Aviso: VPS não respondeu, a tentar modo local:", e);
+        }
+      }
+
+      if (!leagueData) {
+        const localLeague = userLeagues.find(l => l.code === codeInput);
+        if (localLeague) {
+          leagueData = {
+            name: localLeague.name,
+            code: localLeague.code,
+            creatorName: localLeague.creatorName || "Treinador Criador",
+            season: localLeague.season || 1,
+            currentRound: localLeague.currentRound || 1,
+            claimedClubs: localLeague.claimedClubs || {
+              [localLeague.userClubId || 'lusitano']: {
+                managerName: localLeague.userClubName || 'Treinador',
+                isCreator: true
+              }
+            },
+            clubs: (localLeague.leagueState?.clubs || DEFAULT_CLUBS_DATA).map(c => {
+              const claim = localLeague.claimedClubs ? localLeague.claimedClubs[c.id] : null;
+              const isClaim = !!claim || (c.id === (localLeague.userClubId || 'lusitano'));
+              return {
+                id: c.id,
+                name: c.name,
+                short: c.short,
+                primaryColor: c.primaryColor,
+                secondaryColor: c.secondaryColor,
+                isClaimed: isClaim,
+                managerName: claim ? claim.managerName : (isClaim ? localLeague.userClubName : null)
+              };
+            })
+          };
+        } else {
+          leagueData = {
+            name: `Liga ${codeInput}`,
+            code: codeInput,
+            creatorName: "Amigo",
+            season: 1,
+            currentRound: 1,
+            claimedClubs: { lusitano: { managerName: "Treinador Criador", isCreator: true } },
+            clubs: DEFAULT_CLUBS_DATA.map(c => ({
+              ...c,
+              isClaimed: c.id === 'lusitano',
+              managerName: c.id === 'lusitano' ? "Treinador Criador" : null
+            }))
+          };
+        }
+      }
+
+      currentJoinLeagueData = leagueData;
+
+      document.getElementById('join-league-name-display').innerText = leagueData.name;
+      document.getElementById('join-league-round-display').innerText = `Jornada ${leagueData.currentRound || 1}/22 (Temp ${leagueData.season || 1})`;
+      document.getElementById('join-league-creator-display').innerText = `👤 Criada por: ${leagueData.creatorName || 'Treinador Principal'}`;
+
+      renderJoinClubsGrid(leagueData.clubs || [], leagueData.claimedClubs || {});
+      document.getElementById('join-step-team-selection').classList.remove('hidden');
+      showLeagueModalAlert(`✅ Liga "${leagueData.name}" encontrada! Escolhe a tua equipa abaixo.`, "emerald");
+    }
+
+    function renderJoinClubsGrid(clubs, claimedClubs) {
+      const container = document.getElementById('join-clubs-grid');
+      if (!container) return;
+
+      selectedJoinClubId = null;
+      updateJoinConfirmButton();
+
+      container.innerHTML = clubs.map(c => {
+        const claim = claimedClubs[c.id];
+        const isClaimed = !!claim || c.isClaimed;
+        const manager = claim ? claim.managerName : (c.managerName || 'Outro Treinador');
+
+        if (isClaimed) {
+          return `
+            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-rose-500/30 opacity-60 flex items-center justify-between text-xs cursor-not-allowed select-none">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20" style="background-color: ${c.primaryColor}"></span>
+                <div class="min-w-0">
+                  <span class="font-bold text-slate-400 truncate block">${c.name}</span>
+                  <span class="text-[9px] text-slate-500 font-mono">${c.short}</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold shrink-0">
+                🔒 ${manager}
+              </span>
+            </div>
+          `;
+        } else {
+          return `
+            <div onclick="selectClubForJoin('${c.id}')" id="join-card-${c.id}" class="join-card-item p-2.5 rounded-xl bg-black/40 border border-white/10 hover:border-emerald-500 hover:bg-emerald-950/20 active:scale-95 cursor-pointer flex items-center justify-between text-xs transition">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20" style="background-color: ${c.primaryColor}"></span>
+                <div class="min-w-0">
+                  <span class="font-bold text-white truncate block">${c.name}</span>
+                  <span class="text-[9px] text-slate-400 font-mono">${c.short}</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-bold shrink-0">
+                ⚽ Disponível
+              </span>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    function selectClubForJoin(clubId) {
+      selectedJoinClubId = clubId;
+      document.querySelectorAll('.join-card-item').forEach(el => {
+        el.classList.remove('ring-2', 'ring-emerald-400', 'border-emerald-400', 'bg-emerald-950/40');
+      });
+
+      const card = document.getElementById(`join-card-${clubId}`);
+      if (card) {
+        card.classList.add('ring-2', 'ring-emerald-400', 'border-emerald-400', 'bg-emerald-950/40');
+      }
+
+      const clubObj = currentJoinLeagueData?.clubs?.find(c => c.id === clubId);
+      const clubInput = document.getElementById('input-join-league-club');
+      if (clubInput && clubObj) {
+        clubInput.value = clubObj.name;
+      }
+
+      updateJoinConfirmButton();
+    }
+
+    function updateJoinConfirmButton() {
+      const btn = document.getElementById('btn-confirm-join');
+      if (!btn) return;
+
+      if (selectedJoinClubId) {
+        const clubObj = currentJoinLeagueData?.clubs?.find(c => c.id === selectedJoinClubId);
+        btn.disabled = false;
+        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        btn.innerHTML = `<span>⚽</span> <span>Entrar no Campeonato com ${clubObj ? clubObj.name : 'a Equipa Escolhida'}</span>`;
+      } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        btn.innerHTML = `<span>⚽</span> <span>Escolhe uma Equipa Livre Acima para Continuar</span>`;
+      }
     }
 
     function showLeagueModalAlert(msg, type = "emerald") {
@@ -1238,6 +1655,8 @@
           ? "border-emerald-500 bg-emerald-950/30 ring-1 ring-emerald-500" 
           : "border-white/10 bg-black/30 hover:border-slate-600";
 
+        const myClubName = l.userClubName || (l.leagueState?.clubs?.find(c => c.id === l.userClubId)?.name) || 'Lusitano Ginásio';
+
         return `
           <div class="p-3 rounded-2xl border ${borderClass} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs transition">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -1249,6 +1668,8 @@
                   ${l.isCreator ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 font-mono px-1.5 py-0.5 rounded font-bold border border-amber-500/30">CRIADOR</span>' : '<span class="text-[9px] bg-indigo-500/20 text-indigo-300 font-mono px-1.5 py-0.5 rounded font-bold border border-indigo-500/30">CONVIDADO</span>'}
                 </div>
                 <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span>Equipa: <strong class="text-emerald-300 font-bold">${myClubName}</strong></span>
+                  <span>•</span>
                   <span>Código: <strong class="text-amber-400 font-bold">${l.code}</strong></span>
                   <span>•</span>
                   <span>Senha: <strong class="text-emerald-400 font-bold">${l.password}</strong></span>
@@ -1260,17 +1681,20 @@
 
             <!-- Botões de Ação da Liga -->
             <div class="flex items-center gap-1.5 self-end sm:self-center shrink-0">
-              <!-- Partilhar Convite no WhatsApp -->
               <button onclick="shareLeagueInviteWhatsApp('${l.id}')" class="p-2 rounded-xl bg-emerald-600/25 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 transition shadow flex items-center gap-1 font-bold" title="Partilhar Convite no WhatsApp">
                 <span>📲</span>
                 <span class="text-[10px] hidden sm:inline">WhatsApp</span>
               </button>
 
-              ${!isActive ? `
-                <button onclick="switchActiveLeague('${l.id}')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow text-[11px]">
-                  Jogar Neste
+              ${isActive ? `
+                <button onclick="closeLeaguesModal(); switchTab('league');" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black transition shadow text-[11px] flex items-center gap-1">
+                  <span>▶️</span> <span>Entrar em Campo</span>
                 </button>
-              ` : ''}
+              ` : `
+                <button onclick="switchActiveLeague('${l.id}')" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold transition shadow text-[11px] flex items-center gap-1">
+                  <span>▶️</span> <span>Mudar & Jogar</span>
+                </button>
+              `}
 
               ${l.isCreator ? `
                 <button onclick="deleteLeagueAction('${l.id}')" class="p-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition text-xs" title="Apagar Campeonato">
@@ -1287,7 +1711,7 @@
       }).join('');
     }
 
-    function submitCreateLeague() {
+    async function submitCreateLeague() {
       const createdCount = userLeagues.filter(l => l.isCreator).length;
       if (createdCount >= 3) {
         showLeagueModalAlert("⚠️ Atingiste o limite máximo de 3 campeonatos criados por ti!", "rose");
@@ -1297,7 +1721,9 @@
       const nameInput = document.getElementById('input-create-league-name').value.trim();
       let codeInput = document.getElementById('input-create-league-code').value.trim().toUpperCase();
       const passwordInput = document.getElementById('input-create-league-password').value.trim();
-      const clubNameInput = document.getElementById('input-create-league-club').value.trim() || "Lusitano Ginásio";
+      const managerNameInput = (document.getElementById('input-create-league-manager')?.value || "Treinador Principal").trim();
+      const chosenClubId = document.getElementById('select-create-league-club')?.value || 'lusitano';
+      const customClubName = document.getElementById('input-create-league-club')?.value.trim();
 
       if (!nameInput) {
         showLeagueModalAlert("⚠️ Por favor insere um nome para o teu campeonato!", "rose");
@@ -1311,11 +1737,25 @@
         return;
       }
 
-      // 1. Gravar a liga anterior se existir
       saveCurrentGame(false);
 
-      // 2. Gerar novo campeonato fresco com 12 equipas e 22 jornadas de Berger
-      const newLeagueState = createFreshLeagueState(clubNameInput);
+      // Se apenas existia a liga de demonstração inicial padrão, substitui-a
+      if (userLeagues.length === 1 && userLeagues[0].isDefaultInitial) {
+        userLeagues = [];
+      }
+
+      const defaultClubObj = DEFAULT_CLUBS_DATA.find(c => c.id === chosenClubId);
+      const finalClubName = customClubName || (defaultClubObj ? defaultClubObj.name : "Lusitano Ginásio");
+
+      const newLeagueState = createFreshLeagueState(finalClubName, chosenClubId);
+
+      const claimedClubsObj = {
+        [chosenClubId]: {
+          managerName: managerNameInput,
+          isCreator: true,
+          claimedAt: new Date().toISOString()
+        }
+      };
 
       const newLeagueObj = {
         id: 'league_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -1323,14 +1763,37 @@
         code: codeInput,
         password: passwordInput,
         isCreator: true,
+        creatorName: managerNameInput,
         createdAt: new Date().toISOString(),
         lastSavedAt: new Date().toISOString(),
-        userClubName: clubNameInput,
-        userClubShort: getClubInitials(clubNameInput),
+        userClubName: finalClubName,
+        userClubShort: getClubInitials(finalClubName),
+        userClubId: chosenClubId,
         season: 1,
         currentRound: 1,
+        claimedClubs: claimedClubsObj,
         leagueState: newLeagueState
       };
+
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          await fetch('/api/leagues', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: nameInput,
+              code: codeInput,
+              password: passwordInput,
+              creatorName: managerNameInput,
+              creatorClubId: chosenClubId,
+              customClubName: finalClubName,
+              leagueState: newLeagueState
+            })
+          });
+        } catch (e) {
+          console.warn("Aviso ao registar na VPS:", e);
+        }
+      }
 
       userLeagues.push(newLeagueObj);
       activeLeagueId = newLeagueObj.id;
@@ -1340,44 +1803,97 @@
       updateTopLeagueNameBadge();
       updateAllLeagueUIs();
 
-      showLeaguesListView();
-      showLeagueModalAlert(`🎉 Campeonato "${nameInput}" criado com sucesso! Partilha o código no WhatsApp com os teus amigos.`, "emerald");
+      closeLeaguesModal();
+      switchTab('league');
+      showSaveToast(`🏆 Campeonato "${nameInput}" iniciado! És o treinador do ${finalClubName}.`);
     }
 
-    function submitJoinLeague() {
+    async function submitJoinLeague() {
       const codeInput = document.getElementById('input-join-league-code').value.trim().toUpperCase();
       const passwordInput = document.getElementById('input-join-league-password').value.trim();
-      const clubNameInput = document.getElementById('input-join-league-club').value.trim() || "Clube Convidado";
+      const managerNameInput = (document.getElementById('input-join-manager-name')?.value || "Treinador").trim();
+      const customClubName = document.getElementById('input-join-league-club')?.value.trim();
 
       if (!codeInput || !passwordInput) {
         showLeagueModalAlert("⚠️ Por favor preenche o Código de Convite e a Palavra-passe!", "rose");
         return;
       }
 
-      // Verificar se já está nesta liga
+      if (!selectedJoinClubId) {
+        showLeagueModalAlert("⚠️ Tens de escolher uma das equipas livres disponíveis na lista!", "rose");
+        return;
+      }
+
       if (userLeagues.some(l => l.code === codeInput)) {
         showLeagueModalAlert("ℹ️ Já estás inscrito neste campeonato!", "emerald");
         return;
       }
 
-      // Gravar estado atual antes de entrar
       saveCurrentGame(false);
 
-      // Criar entrada no campeonato para o convidado
-      const newLeagueState = createFreshLeagueState(clubNameInput);
+      // Se apenas existia a liga de demonstração inicial padrão, substitui-a
+      if (userLeagues.length === 1 && userLeagues[0].isDefaultInitial) {
+        userLeagues = [];
+      }
+
+      let leagueStateFromServer = null;
+      let claimedClubsFromServer = null;
+      let officialLeagueName = currentJoinLeagueData?.name || `Liga ${codeInput}`;
+
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          const resp = await fetch(`/api/leagues/${encodeURIComponent(codeInput)}/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              password: passwordInput,
+              managerName: managerNameInput,
+              chosenClubId: selectedJoinClubId,
+              customClubName: customClubName
+            })
+          });
+
+          const resData = await resp.json();
+          if (!resp.ok) {
+            showLeagueModalAlert(resData.error || "Erro ao entrar na liga.", "rose");
+            return;
+          }
+
+          leagueStateFromServer = resData.leagueState;
+          claimedClubsFromServer = resData.claimedClubs;
+          officialLeagueName = resData.leagueName || officialLeagueName;
+        } catch (e) {
+          console.warn("Aviso ao comunicar com a VPS:", e);
+        }
+      }
+
+      let newLeagueState = leagueStateFromServer;
+      if (!newLeagueState) {
+        newLeagueState = createFreshLeagueState(customClubName, selectedJoinClubId);
+      } else {
+        newLeagueState.userClubId = selectedJoinClubId;
+      }
+
+      const chosenClub = newLeagueState.clubs.find(c => c.id === selectedJoinClubId);
+      const finalClubName = customClubName || (chosenClub ? chosenClub.name : "O Teu Clube");
 
       const joinedLeagueObj = {
         id: 'league_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        name: `Liga ${codeInput}`,
+        name: officialLeagueName,
         code: codeInput,
         password: passwordInput,
         isCreator: false,
+        managerName: managerNameInput,
         createdAt: new Date().toISOString(),
         lastSavedAt: new Date().toISOString(),
-        userClubName: clubNameInput,
-        userClubShort: getClubInitials(clubNameInput),
-        season: 1,
-        currentRound: 1,
+        userClubName: finalClubName,
+        userClubShort: getClubInitials(finalClubName),
+        userClubId: selectedJoinClubId,
+        season: newLeagueState.season || 1,
+        currentRound: newLeagueState.currentRound || 1,
+        claimedClubs: claimedClubsFromServer || {
+          [selectedJoinClubId]: { managerName: managerNameInput, isCreator: false }
+        },
         leagueState: newLeagueState
       };
 
@@ -1389,21 +1905,23 @@
       updateTopLeagueNameBadge();
       updateAllLeagueUIs();
 
-      showLeaguesListView();
-      showLeagueModalAlert(`🎉 Entraste com sucesso no campeonato ${codeInput}!`, "emerald");
+      closeLeaguesModal();
+      switchTab('league');
+      showSaveToast(`⚽ Entraste na liga "${officialLeagueName}" como treinador do ${finalClubName}!`);
     }
 
-    function createFreshLeagueState(userClubName = "Lusitano Ginásio") {
+    function createFreshLeagueState(userClubName = "Lusitano Ginásio", chosenClubId = "lusitano") {
       const clubs = DEFAULT_CLUBS_DATA.map((c, idx) => {
-        const isUser = c.id === 'lusitano';
+        const isUser = c.id === chosenClubId;
         const baseRating = isUser ? 7 : (Math.random() < 0.3 ? 7 : 6);
         const squad = generateSquadForClub(c.id, baseRating);
 
-        const clubName = isUser ? userClubName : c.name;
+        const clubName = (isUser && userClubName) ? userClubName : c.name;
         const clubShort = getClubInitials(clubName);
 
         return {
           ...c,
+          isUser: isUser,
           name: clubName,
           short: clubShort,
           points: 0, played: 0, wins: 0, draws: 0, losses: 0,
@@ -1418,7 +1936,6 @@
       const clubIds = clubs.map(c => c.id);
       const fixtures = generateBergerFixtures(clubIds);
 
-      // Gerar Mercado inicial com IDs únicos
       const market = [];
       const positions = ['GR', 'DF', 'MD', 'AV'];
       positions.forEach(pos => {
@@ -1430,7 +1947,7 @@
       return {
         season: 1,
         currentRound: 1,
-        userClubId: 'lusitano',
+        userClubId: chosenClubId,
         budget: 16.8,
         palmares: [],
         clubs,
@@ -1440,25 +1957,42 @@
     }
 
     function switchActiveLeague(id) {
-      if (id === activeLeagueId) return;
+      if (id === activeLeagueId) {
+        closeLeaguesModal();
+        switchTab('league');
+        return;
+      }
 
-      // 1. Gravar a liga anterior
       saveCurrentGame(false);
 
-      // 2. Carregar a nova liga
       const targetLeague = userLeagues.find(l => l.id === id);
       if (!targetLeague || !targetLeague.leagueState) return;
 
       activeLeagueId = id;
       leagueState = targetLeague.leagueState;
+      if (targetLeague.userClubId) {
+        leagueState.userClubId = targetLeague.userClubId;
+      }
+      if (targetLeague.userClubName) {
+        const c = leagueState.clubs ? leagueState.clubs.find(x => x.id === leagueState.userClubId) : null;
+        if (c) {
+          c.name = targetLeague.userClubName;
+          if (targetLeague.userClubShort) c.short = targetLeague.userClubShort;
+        }
+      }
 
-      saveCurrentGame(false);
+      try {
+        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+        localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
+      } catch(e) {}
+
       updateTopLeagueNameBadge();
       updateAllLeagueUIs();
+      populateClubCustomUI();
 
-      renderLeaguesListUI();
-      showLeagueModalAlert(`Mudaste para o campeonato "${targetLeague.name}"!`, "emerald");
-      showSaveToast(`🏆 Campeonato: ${targetLeague.name}`);
+      closeLeaguesModal();
+      switchTab('league');
+      showSaveToast(`🏆 Campeonato Ativo: ${targetLeague.name} (${targetLeague.userClubName})`);
     }
 
     function deleteLeagueAction(id) {
@@ -1512,12 +2046,27 @@
     function updateAllLeagueUIs() {
       const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
       if (userClub) {
-        document.getElementById('top-club-name').innerText = userClub.name;
-        document.getElementById('top-season-badge').innerText = `TEMPORADA ${leagueState.season}`;
-        document.getElementById('top-club-budget').innerText = `${leagueState.budget.toFixed(1)} M€`;
-        document.getElementById('top-round-number').innerText = `${leagueState.currentRound} / 22`;
-        updateClubPinsPreview(userClub.primaryColor, userClub.secondaryColor);
-        document.getElementById('club-badge-logo').innerText = userClub.short || getClubInitials(userClub.name);
+        const topClubNameEl = document.getElementById('top-club-name');
+        if (topClubNameEl) topClubNameEl.innerText = userClub.name;
+
+        const topSeasonEl = document.getElementById('top-season-badge');
+        if (topSeasonEl) topSeasonEl.innerText = `TEMPORADA ${leagueState.season}`;
+
+        const topBudgetEl = document.getElementById('top-club-budget');
+        if (topBudgetEl) topBudgetEl.innerText = `${leagueState.budget.toFixed(1)} M€`;
+
+        const topRoundEl = document.getElementById('top-round-number');
+        if (topRoundEl) topRoundEl.innerText = `${leagueState.currentRound} / 22`;
+
+        const badge = document.getElementById('club-badge-logo');
+        if (badge) {
+          badge.innerText = userClub.short || getClubInitials(userClub.name);
+          badge.style.backgroundColor = userClub.primaryColor || '#10b981';
+          badge.style.borderColor = userClub.secondaryColor || '#0f172a';
+          badge.style.borderWidth = '3px';
+        }
+
+        updateClubPinsPreview(userClub.primaryColor || '#10b981', userClub.secondaryColor || '#0f172a');
       }
 
       viewingRound = leagueState.currentRound;
@@ -1526,6 +2075,7 @@
       renderSquadUI();
       renderMarketUI();
       renderPalmaresUI();
+      populateClubCustomUI();
     }
 
     // ==========================================
@@ -1536,7 +2086,7 @@
       if (!league) return;
 
       const appUrl = window.location.origin + window.location.pathname;
-      const text = `⚽ Junta-te à minha Liga '${league.name}' no Tiki-Taka!\n\n🔑 Código de Convite: ${league.code}\n🔒 Palavra-passe: ${league.password}\n\n👉 Entra já aqui para disputar o campeonato comigo:\n${appUrl}?liga=${league.code}`;
+      const text = `⚽ Junta-te à minha Liga '${league.name}' no Tiki-Taka!\n\n🔑 Código de Convite: ${league.code}\n🔐 Palavra-passe: ${league.password}\n\n👉 Clica aqui para escolheres a tua equipa e jogares comigo:\n${appUrl}?liga=${league.code}&pass=${encodeURIComponent(league.password)}`;
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text);
@@ -1640,48 +2190,6 @@
     }
 
     function initLeague() {
-      // 1. Criar os 12 clubes e gerar plantéis
-      leagueState.clubs = DEFAULT_CLUBS_DATA.map((c, idx) => {
-        const baseRating = c.isUser ? 7 : (Math.random() < 0.3 ? 7 : 6);
-        const squad = generateSquadForClub(c.id, baseRating);
-
-        // Se for o clube do utilizador, atribui os nomes lendários que testámos
-        if (c.isUser) {
-          squad.starters[0].name = "Patrício";
-          squad.starters[1].name = "Cancelo";
-          squad.starters[2].name = "Dias";
-          squad.starters[3].name = "Inácio";
-          squad.starters[4].name = "Mendes";
-          squad.starters[5].name = "Palhinha";
-          squad.starters[6].name = "Vitinha";
-          squad.starters[7].name = "Bernardo";
-          squad.starters[8].name = "Neto";
-          squad.starters[9].name = "Zé Trivelas";
-          squad.starters[10].name = "Rafael Leão";
-        }
-
-        return {
-          ...c,
-          points: 0, played: 0, wins: 0, draws: 0, losses: 0,
-          gf: 0, ga: 0, gd: 0,
-          starters: squad.starters,
-          bench: squad.bench,
-          allPlayers: squad.all,
-          tactics: { mentality: "balanced", pressing: "high", buildup: "curta" }
-        };
-      });
-
-      // 2. Gerar as 22 jornadas pelo Algoritmo de Berger
-      const clubIds = leagueState.clubs.map(c => c.id);
-      leagueState.fixtures = generateBergerFixtures(clubIds);
-
-      // 3. Gerar Mercado de Transferências Inicial (~10 jogadores)
-      generateTransferMarket();
-
-      updateLeagueTableUI();
-      renderCurrentRoundUI();
-      renderSquadUI();
-      renderMarketUI();
       loadMultiLeaguesSystem();
     }
 
@@ -1775,10 +2283,7 @@
       } else if (tab === 'palmares') {
         renderPalmaresUI();
       } else if (tab === 'club-custom') {
-        const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
-        if (userClub) {
-          updateClubPinsPreview(userClub.primaryColor, userClub.secondaryColor);
-        }
+        populateClubCustomUI();
       }
     }
 
@@ -1827,6 +2332,9 @@
 
       if (!matches) return;
 
+      const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
+      const claimed = currentLeagueObj?.claimedClubs || {};
+
       const userMatch = matches.find(m => m.home === leagueState.userClubId || m.away === leagueState.userClubId);
       if (userMatch) {
         const isHome = userMatch.home === leagueState.userClubId;
@@ -1845,18 +2353,32 @@
         const isUserMatch = (m.home === leagueState.userClubId || m.away === leagueState.userClubId);
         const scoreText = m.played ? `${m.homeScore} - ${m.awayScore}` : "VS";
 
+        const hClaim = claimed[m.home];
+        const aClaim = claimed[m.away];
+        const isMultiplayerDuel = (hClaim && aClaim);
+
+        let duelBanner = '';
+        if (isMultiplayerDuel) {
+          duelBanner = `<div class="text-[9px] text-amber-300 font-mono font-bold text-center w-full pb-1 border-b border-amber-500/20 mb-1 flex items-center justify-center gap-1">⚔️ DUELO DE TREINADORES: ${hClaim.managerName} vs ${aClaim.managerName}</div>`;
+        }
+
         return `
-          <div class="p-2.5 rounded-xl border ${isUserMatch ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-black/30 border-white/5'} flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-              <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${hClub.primaryColor};"></span>
-              <span class="truncate font-bold ${hClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${hClub.name}</span>
-            </div>
-            <div class="px-3 py-1 bg-black/60 rounded-lg font-mono font-black text-center text-xs shrink-0 ${m.played ? 'text-amber-400' : 'text-slate-400'}">
-              ${scoreText}
-            </div>
-            <div class="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
-              <span class="truncate font-bold ${aClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${aClub.name}</span>
-              <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${aClub.primaryColor};"></span>
+          <div class="p-2.5 rounded-xl border ${isUserMatch ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-black/30 border-white/5'} flex flex-col text-xs transition">
+            ${duelBanner}
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color: ${hClub.primaryColor};"></span>
+                <span class="truncate font-bold ${hClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${hClub.name}</span>
+                ${hClaim && hClub.id !== leagueState.userClubId ? `<span class="text-[9px] text-amber-300 font-mono shrink-0">(${hClaim.managerName})</span>` : ''}
+              </div>
+              <div class="px-3 py-1 bg-black/60 rounded-lg font-mono font-black text-center text-xs shrink-0 ${m.played ? 'text-amber-400' : 'text-slate-400'}">
+                ${scoreText}
+              </div>
+              <div class="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
+                ${aClaim && aClub.id !== leagueState.userClubId ? `<span class="text-[9px] text-amber-300 font-mono shrink-0">(${aClaim.managerName})</span>` : ''}
+                <span class="truncate font-bold ${aClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${aClub.name}</span>
+                <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color: ${aClub.primaryColor};"></span>
+              </div>
             </div>
           </div>
         `;
@@ -1869,27 +2391,38 @@
     }
 
     function updateLeagueTableUI() {
-      // Ordenação rigorosa: Pontos > Diferença de Golos > Golos Marcados
       const sorted = [...leagueState.clubs].sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         if (b.gd !== a.gd) return b.gd - a.gd;
         return b.gf - a.gf;
       });
 
+      const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
+      const claimed = currentLeagueObj?.claimedClubs || {};
+
       const tbody = document.getElementById('league-table-body');
       tbody.innerHTML = sorted.map((c, idx) => {
         const isUser = c.id === leagueState.userClubId;
+        const claim = claimed[c.id];
         const pos = idx + 1;
         let badgeColor = "text-slate-400";
         if (pos === 1) badgeColor = "text-amber-400 font-black";
         else if (pos <= 3) badgeColor = "text-indigo-400 font-bold";
 
+        let managerTag = '';
+        if (isUser) {
+          managerTag = `<span class="text-[9px] bg-emerald-500/20 text-emerald-300 font-mono px-1 py-0.5 rounded border border-emerald-500/30 shrink-0 font-bold">⭐ TU</span>`;
+        } else if (claim) {
+          managerTag = `<span class="text-[9px] bg-amber-500/20 text-amber-300 font-mono px-1 py-0.5 rounded border border-amber-500/30 shrink-0 font-bold">👤 ${claim.managerName}</span>`;
+        }
+
         return `
           <tr class="${isUser ? 'bg-emerald-950/60 font-bold text-emerald-300' : 'hover:bg-white/5 text-slate-300'} transition">
             <td class="py-2 px-1 text-center font-mono ${badgeColor}">${pos}</td>
             <td class="py-2 px-2 flex items-center gap-2 truncate">
-              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${c.primaryColor};"></span>
+              <span class="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20" style="background-color: ${c.primaryColor};"></span>
               <span class="truncate ${isUser ? 'text-emerald-300 font-extrabold' : ''}">${c.name}</span>
+              ${managerTag}
             </td>
             <td class="py-2 px-1 text-center font-mono">${c.played}</td>
             <td class="py-2 px-1 text-center font-mono">${c.wins}</td>
@@ -1904,9 +2437,6 @@
       }).join('');
     }
 
-    // ==========================================
-    // 8. O CICLO DE JOGO NO RELVADO TÁTICO
-    // ==========================================
     let currentMatchObj = null;
     let homeTeam = null;
     let awayTeam = null;
@@ -2653,6 +3183,43 @@ function setSquadFormation(formKey) {
       }
     }
 
+    function onClubColorChange() {
+      const pInput = document.getElementById('input-color-primary');
+      const sInput = document.getElementById('input-color-secondary');
+      const pColor = pInput ? pInput.value : '#10b981';
+      const sColor = sInput ? sInput.value : '#0f172a';
+
+      const lblP = document.getElementById('label-color-primary');
+      if (lblP) lblP.innerText = pColor;
+      const lblS = document.getElementById('label-color-secondary');
+      if (lblS) lblS.innerText = sColor;
+
+      updateClubPinsPreview(pColor, sColor);
+    }
+
+    function populateClubCustomUI() {
+      if (!leagueState || !leagueState.clubs) return;
+      const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
+      if (!userClub) return;
+
+      const nameInput = document.getElementById('input-club-name');
+      if (nameInput) nameInput.value = userClub.name;
+
+      const pInput = document.getElementById('input-color-primary');
+      if (pInput) pInput.value = userClub.primaryColor || '#10b981';
+
+      const sInput = document.getElementById('input-color-secondary');
+      if (sInput) sInput.value = userClub.secondaryColor || '#0f172a';
+
+      const lblP = document.getElementById('label-color-primary');
+      if (lblP) lblP.innerText = userClub.primaryColor || '#10b981';
+
+      const lblS = document.getElementById('label-color-secondary');
+      if (lblS) lblS.innerText = userClub.secondaryColor || '#0f172a';
+
+      updateClubPinsPreview(userClub.primaryColor || '#10b981', userClub.secondaryColor || '#0f172a');
+    }
+
     function updateClubPinsPreview(pColor, sColor) {
       const pinHome = document.getElementById('preview-pin-home');
       const pinAway = document.getElementById('preview-pin-away');
@@ -2674,34 +3241,78 @@ function setSquadFormation(formKey) {
       }
     }
 
-    function saveClubCustomization() {
-      const name = document.getElementById('input-club-name').value.trim();
-      const pColor = document.getElementById('input-color-primary').value;
-      const sColor = document.getElementById('input-color-secondary').value;
+    async function saveClubCustomization() {
+      const nameInput = document.getElementById('input-club-name');
+      const name = nameInput ? nameInput.value.trim() : '';
+      const pColor = document.getElementById('input-color-primary')?.value || '#10b981';
+      const sColor = document.getElementById('input-color-secondary')?.value || '#0f172a';
 
-      if (!name) return;
+      if (!name) {
+        alert("⚠️ Por favor insere um nome para o teu clube!");
+        return;
+      }
+
+      // REGRA: Nomes de equipa têm de ser únicos na liga!
+      const nameLower = name.toLowerCase();
+      const duplicateClub = leagueState.clubs.find(c => c.id !== leagueState.userClubId && c.name.trim().toLowerCase() === nameLower);
+      if (duplicateClub) {
+        alert(`⚠️ Já existe um clube com o nome "${name}" neste campeonato!\n\nCada clube tem de ter um nome único para não haver confusões. Por favor escolhe outro nome.`);
+        return;
+      }
+
+      // REGRA: Cores primária e secundária têm de ser diferentes
+      if (pColor.toLowerCase() === sColor.toLowerCase()) {
+        alert("⚠️ A cor primária e a secundária não podem ser iguais!\n\nEscolhe duas cores contrastantes para os teus equipamentos.");
+        return;
+      }
 
       const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
+      if (!userClub) {
+        alert("⚠️ Erro: Clube não encontrado.");
+        return;
+      }
+
       userClub.name = name;
       userClub.short = getClubInitials(name);
       userClub.primaryColor = pColor;
       userClub.secondaryColor = sColor;
 
-      // Atualizar no cabeçalho e badges
-      document.getElementById('top-club-name').innerText = name;
-      const badge = document.getElementById('club-badge-logo');
-      if (badge) {
-        badge.innerText = userClub.short;
-        badge.style.backgroundColor = pColor;
-        badge.style.borderColor = sColor;
-        badge.style.borderWidth = '3px';
+      const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
+      if (currentLeagueObj) {
+        currentLeagueObj.userClubName = name;
+        currentLeagueObj.userClubShort = userClub.short;
+        if (currentLeagueObj.claimedClubs && currentLeagueObj.claimedClubs[leagueState.userClubId]) {
+          currentLeagueObj.claimedClubs[leagueState.userClubId].clubName = name;
+        }
       }
 
-      updateClubPinsPreview(pColor, sColor);
-      updateLeagueTableUI();
-      renderCurrentRoundUI();
+      saveCurrentGame(false);
+      updateAllLeagueUIs();
+      populateClubCustomUI();
 
-      alert("Identidade, sigla e cores guardadas com sucesso!");
+      // Sincronizar alteração na VPS se online
+      if (currentLeagueObj && currentLeagueObj.code && window.location.protocol.startsWith('http')) {
+        try {
+          const resp = await fetch(`/api/leagues/${encodeURIComponent(currentLeagueObj.code)}/club`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clubId: leagueState.userClubId,
+              name: name,
+              primaryColor: pColor,
+              secondaryColor: sColor
+            })
+          });
+          if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            console.warn("Aviso ao guardar clube na VPS:", errData);
+          }
+        } catch (e) {
+          console.warn("Aviso de rede ao sincronizar clube na VPS:", e);
+        }
+      }
+
+      showSaveToast(`✅ Clube atualizado: "${name}" (${userClub.short}) guardado com sucesso!`);
       switchTab('league');
     }
 
@@ -2713,6 +3324,7 @@ function setSquadFormation(formKey) {
 
     function resizeCanvas() {
       const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
       canvas.width = rect.width * window.devicePixelRatio;
       canvas.height = rect.height * window.devicePixelRatio;
     }
@@ -4060,13 +4672,13 @@ function setSquadFormation(formKey) {
 
     // Inicialização ao carregar a página
     window.addEventListener('DOMContentLoaded', () => {
-      initLeague();
+      loadMultiLeaguesSystem();
       resizeCanvas();
     });
   </script>
 <!-- MODAL DE DIRETRIZES TÁTICAS PRÉ-DEFINIDAS (BALNEÁRIO) -->
   <div id="tactical-guidelines-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-xl w-full p-4 sm:p-5 shadow-2xl space-y-4">
+    <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-xl w-full p-3.5 sm:p-5 shadow-2xl space-y-4 max-h-[92vh] flex flex-col overflow-y-auto custom-scroll">
       <div class="flex items-center justify-between pb-2 border-b border-white/10">
         <div>
           <h3 class="text-base font-black text-white flex items-center gap-2">
@@ -4084,7 +4696,7 @@ function setSquadFormation(formKey) {
             <span>⚖️ 1. Se o Jogo Estiver Empatado:</span>
             <span class="text-[10px] text-slate-400 font-mono">Padrão Inicial</span>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
               <select id="guide-tied-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
@@ -4118,7 +4730,7 @@ function setSquadFormation(formKey) {
             <span>🛡️ 2. Se a Minha Equipa Estiver a Ganhar:</span>
             <span class="text-[10px] text-slate-400 font-mono">Gerir Vantagem</span>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
               <select id="guide-win-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
@@ -4152,7 +4764,7 @@ function setSquadFormation(formKey) {
             <span>⚔️ 3. Se a Minha Equipa Estiver a Perder:</span>
             <span class="text-[10px] text-slate-400 font-mono">Procurar Reviravolta</span>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
               <select id="guide-lose-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
@@ -4229,10 +4841,37 @@ function setSquadFormation(formKey) {
           <span class="text-[10px] text-slate-400">(Podes participar em mais)</span>
         </div>
 
-        <!-- Lista de Ligas -->
+        <!-- PONTO 5: BACKUP, EXPORT & IMPORT DE SAVES -->
+        <div class="p-3 rounded-2xl bg-gradient-to-r from-indigo-950/50 via-black/40 to-slate-900/50 border border-indigo-500/30 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 font-bold text-indigo-300">
+              <span>💾</span>
+              <span>Cópia de Segurança & Sincronização (Savegame)</span>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">Ponto 5 Ativo</span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            Exporta o teu progresso para o teu telemóvel/PC ou sincroniza com a VPS para jogar com amigos.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            <button onclick="exportSaveToFile()" class="p-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600 active:scale-95 text-indigo-200 hover:text-white border border-indigo-500/30 font-bold transition flex items-center justify-center gap-1.5 shadow text-xs" title="Descarregar ficheiro .json">
+              <span>📤</span>
+              <span>Exportar Save</span>
+            </button>
+            <button onclick="triggerImportSaveDialog()" class="p-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600 active:scale-95 text-emerald-200 hover:text-white border border-emerald-500/30 font-bold transition flex items-center justify-center gap-1.5 shadow text-xs" title="Carregar ficheiro .json">
+              <span>📥</span>
+              <span>Importar Save</span>
+            </button>
+            <button onclick="syncActiveLeagueWithVPS(true)" class="p-2 rounded-xl bg-amber-600/30 hover:bg-amber-600 active:scale-95 text-amber-200 hover:text-white border border-amber-500/30 font-bold transition flex items-center justify-center gap-1.5 shadow text-xs" title="Obter resultados mais recentes da VPS">
+              <span>🔄</span>
+              <span>Sincronizar VPS</span>
+            </button>
+          </div>
+          <input type="file" id="import-save-file-input" accept=".json" class="hidden" onchange="handleImportSaveFile(event)">
+        </div>
+
         <div id="leagues-container-list" class="space-y-2"></div>
 
-        <!-- Botões de Ação no Fim da Lista -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/10 shrink-0">
           <button onclick="openCreateLeagueView()" id="btn-open-create-league" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow">
             <span>➕ Criar Campeonato</span>
@@ -4248,7 +4887,7 @@ function setSquadFormation(formKey) {
         <div class="bg-black/30 p-3 rounded-xl border border-white/5 space-y-3 text-xs">
           <div>
             <label class="block text-slate-300 font-bold mb-1">Nome do Campeonato</label>
-            <input type="text" id="input-create-league-name" placeholder="Ex: Liga dos Campeões dos Amigos" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-bold text-xs focus:border-emerald-500 focus:outline-none">
+            <input type="text" id="input-create-league-name" placeholder="Ex: Liga dos Campeões de Família" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-bold text-xs focus:border-emerald-500 focus:outline-none">
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -4264,8 +4903,32 @@ function setSquadFormation(formKey) {
             </div>
           </div>
 
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">O Teu Nome de Treinador</label>
+              <input type="text" id="input-create-league-manager" placeholder="Ex: Paulo (Pai)" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-bold text-xs focus:border-emerald-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Escolhe a Tua Equipa Inicial</label>
+              <select id="select-create-league-club" onchange="updateCreateClubDefaultName()" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-emerald-300 font-bold text-xs focus:border-emerald-500 focus:outline-none">
+                <option value="lusitano" selected>Lusitano Ginásio (LUS)</option>
+                <option value="estrela">Estrela do Ribatejo (EST)</option>
+                <option value="portuense">Atlético Portuense (POR)</option>
+                <option value="braga_norte">Sporting de Braga Norte (SBN)</option>
+                <option value="alentejo">Vitória do Alentejo (VAL)</option>
+                <option value="madeirense">União Madeirense (UMA)</option>
+                <option value="acores">Marítimo dos Açores (MAC)</option>
+                <option value="setubal">Boavista de Setúbal (BSE)</option>
+                <option value="academica">Académica Lusitana (ACA)</option>
+                <option value="olhanense">Sport Clube Olhanense (SCO)</option>
+                <option value="farense">Farense da Serra (FAS)</option>
+                <option value="sintrense">Real Sintrense (RSI)</option>
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label class="block text-slate-300 font-bold mb-1">Nome do Teu Clube neste Campeonato</label>
+            <label class="block text-slate-300 font-bold mb-1">Nome Personalizado do Teu Clube (Opcional)</label>
             <input type="text" id="input-create-league-club" placeholder="Ex: Lusitano Ginásio" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white text-xs focus:border-emerald-500 focus:outline-none">
           </div>
         </div>
@@ -4280,36 +4943,74 @@ function setSquadFormation(formKey) {
         </div>
       </div>
 
-      <!-- VISTA 3: ENTRAR EM CAMPEONATO COM CÓDIGO E PASSWORD -->
+      <!-- VISTA 3: ENTRAR EM CAMPEONATO COM SELEÇÃO DE EQUIPA LIVRE -->
       <div id="league-view-join" class="space-y-3 hidden flex-1 overflow-y-auto custom-scroll pr-1">
+        <!-- Passo 1: Código e Senha -->
         <div class="bg-black/30 p-3 rounded-xl border border-white/5 space-y-3 text-xs">
-          <div>
-            <label class="block text-slate-300 font-bold mb-1">Código de Convite</label>
-            <input type="text" id="input-join-league-code" placeholder="Ex: TIKI-7890" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-amber-400 font-mono font-bold text-xs uppercase focus:border-amber-500 focus:outline-none">
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Insere o código que o teu amigo partilhou no WhatsApp.</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Código de Convite</label>
+              <input type="text" id="input-join-league-code" placeholder="Ex: TIKI-7890" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-amber-400 font-mono font-bold text-xs uppercase focus:border-amber-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Palavra-passe do Campeonato</label>
+              <input type="password" id="input-join-league-password" placeholder="Palavra-passe da Liga" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none">
+            </div>
           </div>
 
-          <div>
-            <label class="block text-slate-300 font-bold mb-1">Palavra-passe do Campeonato</label>
-            <input type="password" id="input-join-league-password" placeholder="Palavra-passe da Liga" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none">
-          </div>
-
-          <div>
-            <label class="block text-slate-300 font-bold mb-1">O Teu Clube neste Campeonato</label>
-            <input type="text" id="input-join-league-club" placeholder="Ex: Estrela Vermelha" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white text-xs focus:border-emerald-500 focus:outline-none">
-          </div>
+          <button onclick="checkLeagueBeforeJoin()" class="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/30 transition flex items-center justify-center gap-1.5">
+            <span>🔍</span>
+            <span>Verificar Campeonato & Carregar Equipas Disponíveis</span>
+          </button>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+        <!-- Passo 2: Seleção de Equipa -->
+        <div id="join-step-team-selection" class="space-y-3 hidden">
+          <div class="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs">
+            <div>
+              <div class="text-[10px] uppercase font-mono text-emerald-400 font-bold">Campeonato Encontrado:</div>
+              <div id="join-league-name-display" class="font-black text-white text-sm">--</div>
+              <div id="join-league-creator-display" class="text-[10px] text-amber-300 mt-0.5">--</div>
+            </div>
+            <div id="join-league-round-display" class="font-mono text-xs text-slate-300 bg-black/40 px-2 py-1 rounded-lg border border-white/10">--</div>
+          </div>
+
+          <div class="bg-black/30 p-3 rounded-xl border border-white/5 space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-200 font-bold mb-1">O Teu Nome de Treinador</label>
+              <input type="text" id="input-join-manager-name" placeholder="Ex: Tiago (Filho)" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white font-bold text-xs focus:border-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-slate-200 font-bold">Escolhe a Tua Equipa no Campeonato:</label>
+                <span class="text-[10px] text-emerald-400 font-mono">Clica numa equipa livre</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mb-2">
+                As equipas já escolhidas por outros jogadores estão bloqueadas (🔒) para não haver repetições.
+              </p>
+              <div id="join-clubs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto custom-scroll p-1"></div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Nome Personalizado da Tua Equipa (Opcional)</label>
+              <input type="text" id="input-join-league-club" placeholder="Podes personalizar o nome da equipa escolhida" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-white text-xs focus:border-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <button onclick="submitJoinLeague()" id="btn-confirm-join" disabled class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+            <span>⚽</span>
+            <span>Escolhe uma Equipa Livre Acima para Continuar</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-start gap-2 pt-1 border-t border-white/10">
           <button onclick="showLeaguesListView()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl">
             Voltar
           </button>
-          <button onclick="submitJoinLeague()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow">
-            Entrar no Campeonato
-          </button>
         </div>
       </div>
-
     </div>
   </div>
 </body>
