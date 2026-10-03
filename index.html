@@ -389,11 +389,19 @@
         <!-- Quadro do Treinador (Desktop) -->
         <div id="coach-panel-card" class="lg:col-span-4 bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-xl p-3 shadow flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-1.5">
-                <span>📋 Prancheta do Treinador</span>
-              </h3>
-              <button onclick="openSubsModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2 py-1 rounded-lg transition">
+            <div class="flex items-center justify-between pb-2 border-b border-white/10 flex-wrap gap-1.5">
+              <div class="flex items-center gap-2">
+                <h3 class="font-black text-sm text-emerald-400 flex items-center gap-1.5">
+                  <span>📋 Balneário do Treinador</span>
+                </h3>
+                <!-- Semáforo do Duelo Tático -->
+                <div id="duel-traffic-light" class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-900 border border-white/10 text-[11px] font-mono shadow" title="Resultado do Duelo Tático deste Período">
+                  <span class="text-slate-400 font-bold">Duelo:</span>
+                  <span id="duel-light-icon" class="text-xs">⚪</span>
+                  <span id="duel-light-text" class="font-bold text-slate-300">Neutro</span>
+                </div>
+              </div>
+              <button onclick="openSubsModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2 py-1 rounded-lg transition shadow">
                 🔄 Substituições (<span id="subs-remaining">3 disp.</span>)
               </button>
             </div>
@@ -414,32 +422,67 @@
               </div>
             </div>
 
-            <!-- Táticas: Mentalidade, Pressão, Saída de Bola -->
-            <div class="space-y-2">
-              <div class="bg-black/20 p-2 rounded-xl border border-white/5">
-                <div class="text-slate-400 text-[10px] uppercase font-bold mb-1">1. Mentalidade</div>
-                <div class="grid grid-cols-3 gap-1">
-                  <button onclick="setMentality('defensive')" id="btn-m-def" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">🛡️ Defesa</button>
-                  <button onclick="setMentality('balanced')" id="btn-m-bal" class="py-1 px-1 rounded bg-emerald-600 text-white font-bold transition text-center text-[10px] border border-emerald-500">⚖️ Equilib.</button>
-                  <button onclick="setMentality('attacking')" id="btn-m-atk" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">⚔️ Ataque</button>
+            <!-- Balneário: Barra dos 6 Períodos (15 em 15 min) & Triângulo Decisor -->
+            <div class="space-y-2.5">
+              <!-- Barra dos 6 Períodos -->
+              <div class="bg-black/40 p-2 rounded-xl border border-white/5 space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-slate-300 font-bold uppercase tracking-wider">⏱️ Período Ativo / Programação:</span>
+                  <span id="period-display-name" class="font-mono text-emerald-400 font-bold">Início (00' - 15')</span>
+                </div>
+                <div class="grid grid-cols-6 gap-1" id="timeline-periods-buttons">
+                  <button type="button" onclick="selectViewingPeriod(0)" id="btn-per-0" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-emerald-500 bg-emerald-950 text-emerald-300">00'</button>
+                  <button type="button" onclick="selectViewingPeriod(1)" id="btn-per-1" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400 hover:text-white">15'</button>
+                  <button type="button" onclick="selectViewingPeriod(2)" id="btn-per-2" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400 hover:text-white">30'</button>
+                  <button type="button" onclick="selectViewingPeriod(3)" id="btn-per-3" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400 hover:text-white">INT</button>
+                  <button type="button" onclick="selectViewingPeriod(4)" id="btn-per-4" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400 hover:text-white">60'</button>
+                  <button type="button" onclick="selectViewingPeriod(5)" id="btn-per-5" class="period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400 hover:text-white">75'</button>
                 </div>
               </div>
 
-              <div class="bg-black/20 p-2 rounded-xl border border-white/5">
-                <div class="text-slate-400 text-[10px] uppercase font-bold mb-1">2. Pressão</div>
-                <div class="grid grid-cols-3 gap-1">
-                  <button onclick="setPressing('low')" id="btn-p-low" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">🐢 Baixa</button>
-                  <button onclick="setPressing('balanced')" id="btn-p-bal" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">⚖️ Média</button>
-                  <button onclick="setPressing('high')" id="btn-p-high" class="py-1 px-1 rounded bg-emerald-600 text-white font-bold transition text-center text-[10px] border border-emerald-500">🔥 Alta</button>
+              <!-- Triângulo da Decisão Tática (Pedra, Papel e Tesoura) -->
+              <div class="bg-black/30 p-2.5 rounded-xl border border-white/5 space-y-2">
+                <!-- Topo: Tiki-Taka -->
+                <div class="flex justify-center">
+                  <button type="button" onclick="applyTacticalChoice('tikitaka')" id="tac-btn-tikitaka" class="tactical-triangle-btn w-full max-w-[230px] p-2 rounded-xl border border-white/10 bg-slate-900 hover:border-emerald-500 text-left transition flex items-center justify-between shadow">
+                    <div>
+                      <div class="font-black text-xs text-white flex items-center gap-1.5">
+                        <span>🎯 Tiki-Taka</span>
+                        <span class="text-[9px] text-emerald-400 font-mono font-bold">(Posse)</span>
+                      </div>
+                      <div class="text-[9px] text-slate-400">Equilib • Média • Curta</div>
+                    </div>
+                    <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20">Ganha 🛡️</span>
+                  </button>
                 </div>
-              </div>
 
-              <div class="bg-black/20 p-2 rounded-xl border border-white/5">
-                <div class="text-slate-400 text-[10px] uppercase font-bold mb-1">3. Saída de Bola</div>
-                <div class="grid grid-cols-3 gap-1">
-                  <button onclick="setBuildup('curta')" id="btn-b-curta" class="py-1 px-1 rounded bg-emerald-600 text-white font-bold transition text-center text-[10px] border border-emerald-500">⚽ Curta</button>
-                  <button onclick="setBuildup('flancos')" id="btn-b-flancos" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">🦅 Flancos</button>
-                  <button onclick="setBuildup('longa')" id="btn-b-longa" class="py-1 px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition text-center text-[10px] border border-slate-700">🚀 Longa</button>
+                <!-- Setas de Fluxo -->
+                <div class="flex items-center justify-between px-6 text-[10px] font-mono text-slate-400 font-bold select-none">
+                  <span>↗️ ganha a</span>
+                  <span>ganha a ↘️</span>
+                </div>
+
+                <!-- Base: Contra-Ataque (Esq) vs Pressão Total (Dir) -->
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" onclick="applyTacticalChoice('counter')" id="tac-btn-counter" class="tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900 hover:border-emerald-500 text-left transition flex flex-col justify-between shadow">
+                    <div>
+                      <div class="font-black text-xs text-white flex items-center gap-1">
+                        <span>🛡️ Contra-Ataque</span>
+                      </div>
+                      <div class="text-[9px] text-slate-400">Defesa • Baixa • Longa</div>
+                    </div>
+                    <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🔥</span>
+                  </button>
+
+                  <button type="button" onclick="applyTacticalChoice('pressing')" id="tac-btn-pressing" class="tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900 hover:border-emerald-500 text-left transition flex flex-col justify-between shadow">
+                    <div>
+                      <div class="font-black text-xs text-white flex items-center gap-1">
+                        <span>🔥 Pressão Total</span>
+                      </div>
+                      <div class="text-[9px] text-slate-400">Ataque • Alta • Flancos</div>
+                    </div>
+                    <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🎯</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -471,7 +514,7 @@
       <!-- Dock Mobile de Comandos Rápidos -->
       <div class="lg:hidden bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl p-2.5 shadow-xl flex items-center justify-between gap-2">
         <button onclick="toggleCoachDrawer()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-slate-700">
-          <span>📋 Prancheta</span>
+          <span>📋 Balneário</span>
           <span id="dock-tactic-summary" class="text-[10px] text-emerald-400 font-mono">Equilib. • Alta</span>
         </button>
         <button onclick="openSubsModal()" class="py-2.5 px-3 bg-indigo-600 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1">
@@ -806,31 +849,67 @@
     </div>
   </div>
 
-  <!-- DRAWER MOBILE DA PRANCHETA TÁTICA -->
+  <!-- DRAWER MOBILE DO BALNEÁRIO TÁTICO -->
   <div id="mobile-coach-drawer" class="fixed inset-x-0 bottom-0 bg-[var(--card,#101927)] border-t border-[var(--border,#1e293b)] rounded-t-2xl p-4 shadow-2xl z-40 transform translate-y-full transition-transform duration-300 max-h-[85vh] overflow-y-auto custom-scroll">
     <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-3">
-      <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-1.5">
-        <span>📋 Prancheta do Treinador</span>
-      </h3>
+      <div class="flex items-center gap-2">
+        <h3 class="font-black text-sm text-emerald-400 flex items-center gap-1.5">
+          <span>📋 Balneário do Treinador</span>
+        </h3>
+        <div id="duel-traffic-light-mobile" class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-900 border border-white/10 text-[10px] font-mono">
+          <span class="text-slate-400 font-bold">Duelo:</span>
+          <span id="duel-light-icon-mob">⚪</span>
+          <span id="duel-light-text-mob" class="text-slate-300 font-bold">Neutro</span>
+        </div>
+      </div>
       <button onclick="toggleCoachDrawer()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
     </div>
-    <!-- Conteúdo mobile tático sincronizado com desktop -->
-    <div class="space-y-2.5">
-      <div class="grid grid-cols-3 gap-1.5">
-        <button onclick="setMentality('defensive')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">🛡️ Defesa</button>
-        <button onclick="setMentality('balanced')" class="py-2 rounded-lg bg-emerald-600 text-white font-bold text-xs border border-emerald-500">⚖️ Equilib.</button>
-        <button onclick="setMentality('attacking')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">⚔️ Ataque</button>
+
+    <!-- Conteúdo mobile tático -->
+    <div class="space-y-3">
+      <div class="bg-black/40 p-2 rounded-xl border border-white/5 space-y-1.5">
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="text-slate-300 font-bold uppercase">⏱️ Período Ativo:</span>
+          <span id="period-display-name-mob" class="font-mono text-emerald-400 font-bold">Início (00' - 15')</span>
+        </div>
+        <div class="grid grid-cols-6 gap-1" id="timeline-periods-buttons-mob">
+          <button type="button" onclick="selectViewingPeriod(0)" id="btn-per-mob-0" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-emerald-500 bg-emerald-950 text-emerald-300">00'</button>
+          <button type="button" onclick="selectViewingPeriod(1)" id="btn-per-mob-1" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">15'</button>
+          <button type="button" onclick="selectViewingPeriod(2)" id="btn-per-mob-2" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">30'</button>
+          <button type="button" onclick="selectViewingPeriod(3)" id="btn-per-mob-3" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">INT</button>
+          <button type="button" onclick="selectViewingPeriod(4)" id="btn-per-mob-4" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">60'</button>
+          <button type="button" onclick="selectViewingPeriod(5)" id="btn-per-mob-5" class="period-btn-mob py-1 rounded text-[10px] font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">75'</button>
+        </div>
       </div>
-      <div class="grid grid-cols-3 gap-1.5">
-        <button onclick="setPressing('low')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">🐢 Baixa</button>
-        <button onclick="setPressing('balanced')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">⚖️ Média</button>
-        <button onclick="setPressing('high')" class="py-2 rounded-lg bg-emerald-600 text-white font-bold text-xs border border-emerald-500">🔥 Alta</button>
+
+      <div class="bg-black/30 p-2.5 rounded-xl border border-white/5 space-y-2">
+        <div class="flex justify-center">
+          <button type="button" onclick="applyTacticalChoice('tikitaka')" id="tac-btn-tikitaka-mob" class="tactical-triangle-btn w-full p-2 rounded-xl border border-white/10 bg-slate-900 text-left flex items-center justify-between">
+            <div>
+              <div class="font-black text-xs text-white">🎯 Tiki-Taka (Posse)</div>
+              <div class="text-[9px] text-slate-400">Equilib • Média • Curta</div>
+            </div>
+            <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20">Ganha 🛡️</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="applyTacticalChoice('counter')" id="tac-btn-counter-mob" class="tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900 text-left flex flex-col justify-between">
+            <div>
+              <div class="font-black text-xs text-white">🛡️ Contra-Ataque</div>
+              <div class="text-[9px] text-slate-400">Defesa • Baixa • Longa</div>
+            </div>
+            <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🔥</span>
+          </button>
+          <button type="button" onclick="applyTacticalChoice('pressing')" id="tac-btn-pressing-mob" class="tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900 text-left flex flex-col justify-between">
+            <div>
+              <div class="font-black text-xs text-white">🔥 Pressão Total</div>
+              <div class="text-[9px] text-slate-400">Ataque • Alta • Flancos</div>
+            </div>
+            <span class="text-[9px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🎯</span>
+          </button>
+        </div>
       </div>
-      <div class="grid grid-cols-3 gap-1.5">
-        <button onclick="setBuildup('curta')" class="py-2 rounded-lg bg-emerald-600 text-white font-bold text-xs border border-emerald-500">⚽ Curta</button>
-        <button onclick="setBuildup('flancos')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">🦅 Flancos</button>
-        <button onclick="setBuildup('longa')" class="py-2 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">🚀 Longa</button>
-      </div>
+
       <button onclick="toggleCoachDrawer(); openSubsModal();" class="w-full py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow mt-2">
         🔄 Fazer Substituições
       </button>
@@ -957,18 +1036,18 @@
     // 2. AS 12 EQUIPAS DA LIGA (ESTRUTURA COMPLETA)
     // ==========================================
     const DEFAULT_CLUBS_DATA = [
-      { id: 'lusitano', name: 'Lusitano Ginásio', short: 'LUS', primaryColor: '#10b981', secondaryColor: '#0f172a', isUser: true },
-      { id: 'estrela', name: 'Estrela do Ribatejo', short: 'EST', primaryColor: '#ef4444', secondaryColor: '#f8fafc', isUser: false },
-      { id: 'portuense', name: 'Atlético Portuense', short: 'POR', primaryColor: '#2563eb', secondaryColor: '#f8fafc', isUser: false },
-      { id: 'braga_norte', name: 'Sporting de Braga Norte', short: 'SBN', primaryColor: '#dc2626', secondaryColor: '#16a34a', isUser: false },
-      { id: 'alentejo', name: 'Vitória do Alentejo', short: 'VAL', primaryColor: '#f8fafc', secondaryColor: '#0f172a', isUser: false },
-      { id: 'madeirense', name: 'União Madeirense', short: 'UMA', primaryColor: '#f59e0b', secondaryColor: '#1e3a8a', isUser: false },
-      { id: 'acores', name: 'Marítimo dos Açores', short: 'MAC', primaryColor: '#059669', secondaryColor: '#dc2626', isUser: false },
-      { id: 'setubal', name: 'Boavista de Setúbal', short: 'BSE', primaryColor: '#334155', secondaryColor: '#d97706', isUser: false },
-      { id: 'academica', name: 'Académica Lusitana', short: 'ACA', primaryColor: '#020617', secondaryColor: '#f8fafc', isUser: false },
-      { id: 'olhanense', name: 'Sport Clube Olhanense', short: 'SCO', primaryColor: '#b91c1c', secondaryColor: '#eab308', isUser: false },
-      { id: 'farense', name: 'Farense da Serra', short: 'FAS', primaryColor: '#047857', secondaryColor: '#eab308', isUser: false },
-      { id: 'sintrense', name: 'Real Sintrense', short: 'RSI', primaryColor: '#7c3aed', secondaryColor: '#94a3b8', isUser: false }
+      { id: 'lusitano', name: 'Lusitano Ginásio', short: 'LUS', primaryColor: '#10b981', secondaryColor: '#0f172a', baseRating: 7.0, isUser: true },
+      { id: 'braga_norte', name: 'Sporting de Braga Norte', short: 'SBN', primaryColor: '#dc2626', secondaryColor: '#16a34a', baseRating: 7.5, isUser: false },
+      { id: 'portuense', name: 'Atlético Portuense', short: 'POR', primaryColor: '#2563eb', secondaryColor: '#f8fafc', baseRating: 7.3, isUser: false },
+      { id: 'sintrense', name: 'Real Sintrense', short: 'RSI', primaryColor: '#7c3aed', secondaryColor: '#94a3b8', baseRating: 7.1, isUser: false },
+      { id: 'academica', name: 'Académica Lusitana', short: 'ACA', primaryColor: '#020617', secondaryColor: '#f8fafc', baseRating: 6.8, isUser: false },
+      { id: 'estrela', name: 'Estrela do Ribatejo', short: 'EST', primaryColor: '#ef4444', secondaryColor: '#f8fafc', baseRating: 6.6, isUser: false },
+      { id: 'olhanense', name: 'Sport Clube Olhanense', short: 'SCO', primaryColor: '#b91c1c', secondaryColor: '#eab308', baseRating: 6.5, isUser: false },
+      { id: 'alentejo', name: 'Vitória do Alentejo', short: 'VAL', primaryColor: '#f8fafc', secondaryColor: '#0f172a', baseRating: 6.2, isUser: false },
+      { id: 'setubal', name: 'Boavista de Setúbal', short: 'BSE', primaryColor: '#334155', secondaryColor: '#d97706', baseRating: 6.1, isUser: false },
+      { id: 'farense', name: 'Farense da Serra', short: 'FAS', primaryColor: '#047857', secondaryColor: '#eab308', baseRating: 6.0, isUser: false },
+      { id: 'madeirense', name: 'União Madeirense', short: 'UMA', primaryColor: '#f59e0b', secondaryColor: '#1e3a8a', baseRating: 5.8, isUser: false },
+      { id: 'acores', name: 'Marítimo dos Açores', short: 'MAC', primaryColor: '#059669', secondaryColor: '#dc2626', baseRating: 5.7, isUser: false }
     ];
 
     function generateSquadForClub(clubId, baseRating = 6) {
@@ -2009,8 +2088,8 @@
     function createFreshLeagueState(userClubName = "Lusitano Ginásio", chosenClubId = "lusitano") {
       const clubs = DEFAULT_CLUBS_DATA.map((c, idx) => {
         const isUser = c.id === chosenClubId;
-        const baseRating = isUser ? 7 : (Math.random() < 0.3 ? 7 : 6);
-        const squad = generateSquadForClub(c.id, baseRating);
+        const initialRating = isUser ? 7 : Math.round(c.baseRating || 6);
+        const squad = generateSquadForClub(c.id, initialRating);
 
         const clubName = (isUser && userClubName) ? userClubName : c.name;
         const clubShort = getClubInitials(clubName);
@@ -2493,7 +2572,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color: ${hClub.primaryColor};"></span>
-                <span class="truncate font-bold ${hClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${hClub.name}</span>
+                <span class="truncate font-bold ${hClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${hClub.name}</span> <span class="text-[9px] text-amber-300 font-mono font-bold shrink-0">⭐${getClubAverageRating(hClub)}</span>
                 ${hClaim && hClub.id !== leagueState.userClubId ? `<span class="text-[9px] text-amber-300 font-mono shrink-0">(${hClaim.managerName})</span>` : ''}
               </div>
               <div class="px-3 py-1 bg-black/60 rounded-lg font-mono font-black text-center text-xs shrink-0 ${m.played ? 'text-amber-400' : 'text-slate-400'}">
@@ -2501,7 +2580,7 @@
               </div>
               <div class="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
                 ${aClaim && aClub.id !== leagueState.userClubId ? `<span class="text-[9px] text-amber-300 font-mono shrink-0">(${aClaim.managerName})</span>` : ''}
-                <span class="truncate font-bold ${aClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${aClub.name}</span>
+                <span class="text-[9px] text-amber-300 font-mono font-bold shrink-0">⭐${getClubAverageRating(aClub)}</span> <span class="truncate font-bold ${aClub.id === leagueState.userClubId ? 'text-emerald-400' : 'text-slate-200'}">${aClub.name}</span>
                 <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color: ${aClub.primaryColor};"></span>
               </div>
             </div>
@@ -2547,6 +2626,7 @@
             <td class="py-2 px-2 flex items-center gap-2 truncate">
               <span class="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20" style="background-color: ${c.primaryColor};"></span>
               <span class="truncate ${isUser ? 'text-emerald-300 font-extrabold' : ''}">${c.name}</span>
+              <span class="text-[9px] bg-amber-500/15 text-amber-300 font-mono px-1 py-0.5 rounded border border-amber-500/30 font-bold shrink-0">⭐ ${getClubAverageRating(c)}</span>
               ${managerTag}
             </td>
             <td class="py-2 px-1 text-center font-mono">${c.played}</td>
@@ -2715,9 +2795,28 @@
       if (!isRunning) {
         resetMatch();
       }
-      setMentality(homeTeam.tactics.mentality || 'balanced');
-      setPressing(homeTeam.tactics.pressing || 'high');
-      setBuildup(homeTeam.tactics.buildup || 'curta');
+      // Inicialização de Balneário (Schedules de 6 períodos)
+      const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
+      if (!userClub.tacticalSchedule || userClub.tacticalSchedule.length !== 6) {
+        userClub.tacticalSchedule = ['tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka'];
+      }
+
+      // Se for BOT, gera uma programação tática estratégica
+      const tacticsPool = ['tikitaka', 'counter', 'pressing'];
+      if (!homeTeam.tacticalSchedule || homeTeam.id !== leagueState.userClubId) {
+        homeTeam.tacticalSchedule = Array.from({ length: 6 }, () => tacticsPool[Math.floor(Math.random() * tacticsPool.length)]);
+      }
+      if (!awayTeam.tacticalSchedule || awayTeam.id !== leagueState.userClubId) {
+        awayTeam.tacticalSchedule = Array.from({ length: 6 }, () => tacticsPool[Math.floor(Math.random() * tacticsPool.length)]);
+      }
+
+      if (homeTeam.id === leagueState.userClubId) homeTeam.tacticalSchedule = [...userClub.tacticalSchedule];
+      if (awayTeam.id === leagueState.userClubId) awayTeam.tacticalSchedule = [...userClub.tacticalSchedule];
+
+      currentMatchPeriodIdx = 0;
+      viewingPeriodIdx = 0;
+      updateBalnearioUI();
+      updateDuelTrafficLight();
     }
 
     function startMatchView() {
@@ -2947,6 +3046,56 @@
       }
 
       alert(`🎉 FIM DA TEMPORADA ${leagueState.season}!\n\n🏆 Campeão: ${champion.name}\n📍 A tua posição: ${userPos}º Lugar (${userClub.points} Pts)\n💰 Prémio Conquistado: ${prize.toFixed(1)} M€!${retireSummary}\n\nAvançando para a Temporada ${leagueState.season + 1}...`);
+
+      // ==========================================
+      // EVOLUÇÃO AUTOMÁTICA DOS BOTS (BASEADA NA MÉDIA DAS EQUIPAS HUMANAS)
+      // ==========================================
+      const humanClubs = leagueState.clubs.filter(c => {
+        const isLocalUser = c.id === leagueState.userClubId;
+        const isClaimed = currentLeagueObj?.claimedClubs && currentLeagueObj.claimedClubs[c.id];
+        return isLocalUser || isClaimed;
+      });
+
+      const humanRatings = humanClubs.map(c => getClubAverageRating(c));
+      const avgHumanRating = humanRatings.length > 0
+        ? (humanRatings.reduce((a, b) => a + b, 0) / humanRatings.length)
+        : 7.0;
+
+      // Ordenar clubes BOT pelo seu sucesso para definir metas de reforço
+      const botClubs = leagueState.clubs.filter(c => !humanClubs.includes(c));
+      botClubs.sort((a, b) => b.points - a.points);
+
+      botClubs.forEach((bot, bIdx) => {
+        // Os 3 melhores bots perseguem a média dos humanos; os médios e baixos acompanham gradualmente
+        let targetBotRating;
+        if (bIdx < 3) {
+          targetBotRating = Math.min(9.0, Math.max(7.4, avgHumanRating + 0.1));
+        } else if (bIdx < 7) {
+          targetBotRating = Math.min(8.5, Math.max(6.8, avgHumanRating - 0.4));
+        } else {
+          targetBotRating = Math.min(8.0, Math.max(6.2, avgHumanRating - 0.9));
+        }
+
+        // Reforçar titulares do BOT até atingir a meta
+        let attempts = 0;
+        while (getClubAverageRating(bot) < targetBotRating && attempts < 15) {
+          attempts++;
+          // Encontrar o titular mais fraco
+          bot.starters.sort((p1, p2) => p1.overall - p2.overall);
+          const weakest = bot.starters[0];
+          if (weakest && weakest.overall < 9) {
+            const upgradedNote = Math.min(9, weakest.overall + Math.floor(Math.random() * 2) + 1);
+            weakest.overall = upgradedNote;
+            weakest.effectiveOverall = upgradedNote;
+            weakest.age = Math.floor(Math.random() * 5) + 21; // Contratação jovem no auge
+            weakest.marketValue = calculateMarketValue(upgradedNote, weakest.age);
+          }
+        }
+
+        // Variar programação tática do BOT para a nova temporada
+        const pool = ['tikitaka', 'counter', 'pressing'];
+        bot.tacticalSchedule = Array.from({ length: 6 }, () => pool[Math.floor(Math.random() * pool.length)]);
+      });
 
       leagueState.season++;
       leagueState.currentRound = 1;
@@ -4361,6 +4510,42 @@ function setSquadFormation(formKey) {
     // ==========================================
     // 12. MOTOR DE JOGO (CICLO DE SIMULAÇÃO 90')
     // ==========================================
+    // ==========================================
+    // BALNEÁRIO: SISTEMA DE DUELOS TÁTICOS (PEDRA, PAPEL E TESOURA)
+    // ==========================================
+    const TACTICAL_STYLES = {
+      tikitaka: { name: 'Tiki-Taka', short: 'Posse Curta', mentality: 'balanced', pressing: 'balanced', buildup: 'curta', beats: 'counter', losesTo: 'pressing' },
+      counter:  { name: 'Contra-Ataque', short: 'Bloco Baixo', mentality: 'defensive', pressing: 'low', buildup: 'longa', beats: 'pressing', losesTo: 'tikitaka' },
+      pressing: { name: 'Pressão Total', short: 'Sufoco', mentality: 'attacking', pressing: 'high', buildup: 'flancos', beats: 'tikitaka', losesTo: 'counter' }
+    };
+
+    const CHECKPOINT_NAMES = [
+      "Início (00' - 15')",
+      "15' (15' - 30')",
+      "30' (30' - 45')",
+      "Intervalo (45' - 60')",
+      "60' (60' - 75')",
+      "75' (75' - 90')"
+    ];
+
+    let viewingPeriodIdx = 0;
+    let currentMatchPeriodIdx = 0;
+    let activeDuelResult = 0; // 1 = Home vence, -1 = Away vence, 0 = empate
+
+    function evaluateTacticalDuel(tacA, tacB) {
+      if (tacA === tacB) return 0;
+      if (tacA === 'counter' && tacB === 'pressing') return 1;
+      if (tacA === 'pressing' && tacB === 'tikitaka') return 1;
+      if (tacA === 'tikitaka' && tacB === 'counter') return 1;
+      return -1;
+    }
+
+    function getClubAverageRating(club) {
+      if (!club || !club.starters || club.starters.length === 0) return 6.0;
+      const sum = club.starters.reduce((acc, p) => acc + (Number(p.overall) || 6), 0);
+      return Number((sum / club.starters.length).toFixed(1));
+    }
+
     function calculatePowers() {
       const avg = (team, pos) => {
         const list = team.starters.filter(p => p.pos === pos);
@@ -4370,28 +4555,39 @@ function setSquadFormation(formKey) {
       let h_gr = avg(homeTeam, 'GR'), h_df = avg(homeTeam, 'DF'), h_md = avg(homeTeam, 'MD'), h_av = avg(homeTeam, 'AV');
       let a_gr = avg(awayTeam, 'GR'), a_df = avg(awayTeam, 'DF'), a_md = avg(awayTeam, 'MD'), a_av = avg(awayTeam, 'AV');
 
-      if (homeTeam.tactics.mentality === 'defensive') { h_gr += 1; h_df += 2; h_md += 1; h_av -= 2; }
-      else if (homeTeam.tactics.mentality === 'attacking') { h_gr -= 1; h_df -= 2; h_md += 1; h_av += 2; }
+      // Aplicação dos atributos da tática ativa do período
+      const periodIdx = Math.min(5, Math.floor(minute / 15));
+      const hTacKey = (homeTeam.tacticalSchedule && homeTeam.tacticalSchedule[periodIdx]) || 'tikitaka';
+      const aTacKey = (awayTeam.tacticalSchedule && awayTeam.tacticalSchedule[periodIdx]) || 'tikitaka';
 
-      if (homeTeam.tactics.pressing === 'low') { h_df += 1; h_av -= 1; }
-      else if (homeTeam.tactics.pressing === 'high') { h_df -= 1; h_md += 1; h_av += 2; }
+      const hStyle = TACTICAL_STYLES[hTacKey] || TACTICAL_STYLES.tikitaka;
+      const aStyle = TACTICAL_STYLES[aTacKey] || TACTICAL_STYLES.tikitaka;
 
-      if (homeTeam.tactics.buildup === 'curta') { h_df += 1; h_md += 2; }
-      else if (homeTeam.tactics.buildup === 'flancos') { h_md -= 1; h_av += 1; }
-      else if (homeTeam.tactics.buildup === 'longa') { h_df -= 1; h_md -= 1; h_av += 2; }
+      // Modificadores da Casa
+      if (hStyle.mentality === 'defensive') { h_gr += 1; h_df += 2; h_md += 1; h_av -= 2; }
+      else if (hStyle.mentality === 'attacking') { h_gr -= 1; h_df -= 2; h_md += 1; h_av += 2; }
+      if (hStyle.pressing === 'low') { h_df += 1; h_av -= 1; }
+      else if (hStyle.pressing === 'high') { h_df -= 1; h_md += 1; h_av += 2; }
+      if (hStyle.buildup === 'curta') { h_df += 1; h_md += 2; }
+      else if (hStyle.buildup === 'flancos') { h_md -= 1; h_av += 1; }
+      else if (hStyle.buildup === 'longa') { h_df -= 1; h_md -= 1; h_av += 2; }
 
-      // Matriz Pedra, Papel e Tesoura
-      if (homeTeam.tactics.pressing === 'high' && awayTeam.tactics.buildup === 'curta') h_md += 2.0;
-      else if (awayTeam.tactics.pressing === 'high' && homeTeam.tactics.buildup === 'curta') a_md += 2.0;
+      // Modificadores de Fora
+      if (aStyle.mentality === 'defensive') { a_gr += 1; a_df += 2; a_md += 1; a_av -= 2; }
+      else if (aStyle.mentality === 'attacking') { a_gr -= 1; a_df -= 2; a_md += 1; a_av += 2; }
+      if (aStyle.pressing === 'low') { a_df += 1; a_av -= 1; }
+      else if (aStyle.pressing === 'high') { a_df -= 1; a_md += 1; a_av += 2; }
+      if (aStyle.buildup === 'curta') { a_df += 1; a_md += 2; }
+      else if (aStyle.buildup === 'flancos') { a_md -= 1; a_av += 1; }
+      else if (aStyle.buildup === 'longa') { a_df -= 1; a_md -= 1; a_av += 2; }
 
-      if (homeTeam.tactics.buildup === 'longa' && awayTeam.tactics.pressing === 'high') h_av += 2.0;
-      else if (awayTeam.tactics.buildup === 'longa' && homeTeam.tactics.pressing === 'high') a_av += 2.0;
-
-      if (homeTeam.tactics.mentality === 'defensive' && awayTeam.tactics.buildup === 'longa') h_df += 2.0;
-      else if (awayTeam.tactics.mentality === 'defensive' && homeTeam.tactics.buildup === 'longa') a_df += 2.0;
-
-      if (homeTeam.tactics.buildup === 'flancos' && awayTeam.tactics.mentality === 'defensive') h_av += 1.5;
-      else if (awayTeam.tactics.buildup === 'flancos' && homeTeam.tactics.mentality === 'defensive') a_av += 1.5;
+      // BÓNUS DO DUELO TÁTICO (Pedra, Papel e Tesoura): +1.5 em todos os setores
+      activeDuelResult = evaluateTacticalDuel(hTacKey, aTacKey);
+      if (activeDuelResult === 1) {
+        h_df += 1.5; h_md += 1.5; h_av += 1.5;
+      } else if (activeDuelResult === -1) {
+        a_df += 1.5; a_md += 1.5; a_av += 1.5;
+      }
 
       return {
         h: { gr: h_gr, df: h_df, md: h_md, av: h_av },
@@ -4456,11 +4652,20 @@ function setSquadFormation(formKey) {
       updateHeader();
       applyStaminaDrain(3);
 
+      // Atualizar checkpoint de 15 minutos do Balneário
+      const prevPeriod = currentMatchPeriodIdx;
+      currentMatchPeriodIdx = Math.min(5, Math.floor(minute / 15));
+      if (prevPeriod !== currentMatchPeriodIdx || minute === 3) {
+        viewingPeriodIdx = currentMatchPeriodIdx;
+        updateBalnearioUI();
+        updateDuelTrafficLight();
+      }
+
       if (minute === 45 && !isSecondHalf) {
         pauseGame();
         isHalftimeActive = true;
         document.getElementById('halftime-banner').classList.remove('hidden');
-        logEvent(45, 'half', `⏸️ INTERVALO DE JOGO! As equipas descansam e trocam de campo. Faça ajustes na prancheta!`);
+        logEvent(45, 'half', `⏸️ INTERVALO DE JOGO! As equipas descansam e trocam de campo. Faça ajustes no Balneário!`);
         return;
       }
 
@@ -4859,53 +5064,160 @@ function setSquadFormation(formKey) {
       document.getElementById('tactical-guidelines-modal').classList.add('hidden');
     }
 
-    function saveTacticalGuidelines() {
-      tacticalGuidelines.onTied = {
-        mentality: document.getElementById('guide-tied-mentality').value,
-        pressing: document.getElementById('guide-tied-pressing').value,
-        buildup: document.getElementById('guide-tied-buildup').value
-      };
-      tacticalGuidelines.onWinning = {
-        mentality: document.getElementById('guide-win-mentality').value,
-        pressing: document.getElementById('guide-win-pressing').value,
-        buildup: document.getElementById('guide-win-buildup').value
-      };
-      tacticalGuidelines.onLosing = {
-        mentality: document.getElementById('guide-lose-mentality').value,
-        pressing: document.getElementById('guide-lose-pressing').value,
-        buildup: document.getElementById('guide-lose-buildup').value
-      };
-      tacticalGuidelines.autoApply = document.getElementById('guide-auto-apply').checked;
-
-      closeTacticalGuidelinesModal();
-      alert("✅ Diretrizes de Balneário salvas com sucesso!");
+    function selectViewingPeriod(idx) {
+      viewingPeriodIdx = idx;
+      updateBalnearioUI();
     }
 
-    function applyTacticalGuidelinesForScore(currentScoreHome, currentScoreAway) {
-      if (!tacticalGuidelines.autoApply || !homeTeam) return;
+    function applyTacticalChoice(tacticKey) {
+      const userClub = leagueState.clubs ? leagueState.clubs.find(c => c.id === leagueState.userClubId) : null;
+      if (!userClub) return;
 
-      const userIsHome = homeTeam.id === leagueState.userClubId;
-      const userGoals = userIsHome ? currentScoreHome : currentScoreAway;
-      const oppGoals = userIsHome ? currentScoreAway : currentScoreHome;
-
-      let rule = null;
-      let label = "";
-
-      if (userGoals > oppGoals) {
-        rule = tacticalGuidelines.onWinning;
-        label = "Se a Ganhar";
-      } else if (userGoals < oppGoals) {
-        rule = tacticalGuidelines.onLosing;
-        label = "Se a Perder";
-      } else {
-        rule = tacticalGuidelines.onTied;
-        label = "Se Empatado";
+      if (!userClub.tacticalSchedule || !Array.isArray(userClub.tacticalSchedule) || userClub.tacticalSchedule.length !== 6) {
+        userClub.tacticalSchedule = ['tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka'];
       }
 
-      setMentality(rule.mentality);
-      setPressing(rule.pressing);
-      setBuildup(rule.buildup);
-      logEvent(minute, 'tactic', `🤖 Diretriz de Balneário ativada [${label}]: ${rule.mentality.toUpperCase()}, Pressão ${rule.pressing.toUpperCase()}.`);
+      userClub.tacticalSchedule[viewingPeriodIdx] = tacticKey;
+
+      const currentLeagueObj = userLeagues.find(l => l.id === activeLeagueId);
+      if (currentLeagueObj) {
+        currentLeagueObj.tacticalSchedule = [...userClub.tacticalSchedule];
+      }
+
+      // Se estamos num jogo ativo e o utilizador alterou o período atual em campo
+      if (homeTeam && awayTeam) {
+        const isUserHome = (homeTeam.id === leagueState.userClubId);
+        const userTeamObj = isUserHome ? homeTeam : awayTeam;
+        userTeamObj.tacticalSchedule = [...userClub.tacticalSchedule];
+
+        if (viewingPeriodIdx === currentMatchPeriodIdx) {
+          const style = TACTICAL_STYLES[tacticKey];
+          if (style) {
+            userTeamObj.tactics.mentality = style.mentality;
+            userTeamObj.tactics.pressing = style.pressing;
+            userTeamObj.tactics.buildup = style.buildup;
+            updateTacticalMobilityTargets();
+          }
+          updateDuelTrafficLight();
+        }
+      }
+
+      saveCurrentGame(false);
+      updateBalnearioUI();
+    }
+
+    function updateBalnearioUI() {
+      const userClub = leagueState.clubs ? leagueState.clubs.find(c => c.id === leagueState.userClubId) : null;
+      const schedule = userClub?.tacticalSchedule || ['tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka', 'tikitaka'];
+      const selectedTactic = schedule[viewingPeriodIdx] || 'tikitaka';
+
+      // Atualizar nomes de exibição dos períodos
+      const periodName = CHECKPOINT_NAMES[viewingPeriodIdx] || "Início";
+      const lblDesktop = document.getElementById('period-display-name');
+      if (lblDesktop) lblDesktop.innerText = periodName;
+      const lblMob = document.getElementById('period-display-name-mob');
+      if (lblMob) lblMob.innerText = periodName;
+      const lblModal = document.getElementById('modal-period-display-name');
+      if (lblModal) lblModal.innerText = periodName;
+
+      // Atualizar botões dos períodos (Desktop, Mobile, Modal)
+      for (let i = 0; i < 6; i++) {
+        const isCurrentMatch = (i === currentMatchPeriodIdx && isRunning);
+        const isSelected = (i === viewingPeriodIdx);
+
+        ['btn-per-', 'btn-per-mob-', 'btn-per-mod-'].forEach(prefix => {
+          const btn = document.getElementById(`${prefix}${i}`);
+          if (btn) {
+            let cls = "period-btn py-1 px-0.5 rounded-lg text-[10px] font-mono font-bold transition text-center border ";
+            if (isSelected) {
+              cls += "border-emerald-500 bg-emerald-950 text-emerald-300 ring-1 ring-emerald-500 shadow";
+            } else if (isCurrentMatch) {
+              cls += "border-amber-500/70 bg-amber-950/40 text-amber-300 animate-pulse";
+            } else {
+              cls += "border-white/10 bg-slate-900 text-slate-400 hover:text-white";
+            }
+            btn.className = cls;
+          }
+        });
+      }
+
+      // Iluminação do Triângulo Tático (Desktop, Mobile, Modal)
+      ['tikitaka', 'counter', 'pressing'].forEach(k => {
+        const isChosen = (k === selectedTactic);
+        ['tac-btn-', 'tac-btn-', 'tac-btn-'].forEach(pfx => {
+          const elDesk = document.getElementById(`tac-btn-${k}`);
+          if (elDesk) {
+            elDesk.className = isChosen
+              ? "tactical-triangle-btn p-2 rounded-xl border border-emerald-400 bg-emerald-950/60 ring-2 ring-emerald-400/80 text-left transition flex justify-between shadow-lg"
+              : "tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900/90 hover:border-slate-600 text-left transition flex justify-between shadow";
+          }
+          const elMob = document.getElementById(`tac-btn-${k}-mob`);
+          if (elMob) {
+            elMob.className = isChosen
+              ? "tactical-triangle-btn p-2 rounded-xl border border-emerald-400 bg-emerald-950/60 ring-2 ring-emerald-400/80 text-left transition flex justify-between shadow"
+              : "tactical-triangle-btn p-2 rounded-xl border border-white/10 bg-slate-900/90 text-left transition flex justify-between shadow";
+          }
+          const elMod = document.getElementById(`tac-btn-${k}-mod`);
+          if (elMod) {
+            elMod.className = isChosen
+              ? "tactical-triangle-btn p-2.5 rounded-xl border border-emerald-400 bg-emerald-950/60 ring-2 ring-emerald-400/80 text-left transition flex justify-between shadow"
+              : "tactical-triangle-btn p-2.5 rounded-xl border border-white/10 bg-slate-900/90 text-left transition flex justify-between shadow";
+          }
+        });
+      });
+
+      // Atualizar resumo no dock
+      const dockSummary = document.getElementById('dock-tactic-summary');
+      if (dockSummary) {
+        const style = TACTICAL_STYLES[schedule[currentMatchPeriodIdx]] || TACTICAL_STYLES.tikitaka;
+        dockSummary.innerText = style.name;
+      }
+    }
+
+    function updateDuelTrafficLight() {
+      if (!homeTeam || !awayTeam) return;
+      const isUserHome = (homeTeam.id === leagueState.userClubId);
+      const userAdvantage = isUserHome ? activeDuelResult : -activeDuelResult;
+
+      const lightDesk = document.getElementById('duel-traffic-light');
+      const iconDesk = document.getElementById('duel-light-icon');
+      const textDesk = document.getElementById('duel-light-text');
+
+      const lightMob = document.getElementById('duel-traffic-light-mobile');
+      const iconMob = document.getElementById('duel-light-icon-mob');
+      const textMob = document.getElementById('duel-light-text-mob');
+
+      let icon = "⚪";
+      let text = "Neutro";
+      let borderBg = "border-white/10 bg-slate-900 text-slate-300";
+
+      if (userAdvantage === 1) {
+        icon = "🟢";
+        text = "Vantagem (+1.5)";
+        borderBg = "border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]";
+      } else if (userAdvantage === -1) {
+        icon = "🔴";
+        text = "Desvantagem (-1.5)";
+        borderBg = "border-rose-500/50 bg-rose-950/70 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.3)]";
+      }
+
+      if (iconDesk) iconDesk.innerText = icon;
+      if (textDesk) textDesk.innerText = text;
+      if (lightDesk) lightDesk.className = `flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-mono shadow ${borderBg}`;
+
+      if (iconMob) iconMob.innerText = icon;
+      if (textMob) textMob.innerText = text;
+      if (lightMob) lightMob.className = `flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-mono ${borderBg}`;
+    }
+
+    function openTacticalGuidelinesModal() {
+      viewingPeriodIdx = currentMatchPeriodIdx || 0;
+      updateBalnearioUI();
+      document.getElementById('tactical-guidelines-modal').classList.remove('hidden');
+    }
+
+    function closeTacticalGuidelinesModal() {
+      document.getElementById('tactical-guidelines-modal').classList.add('hidden');
     }
 
     function setMentality(m) {
@@ -5191,138 +5503,78 @@ function setSquadFormation(formKey) {
 
   <!-- MODAL DE DIRETRIZES TÁTICAS PRÉ-DEFINIDAS (BALNEÁRIO) -->
   <div id="tactical-guidelines-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-xl w-full p-3.5 sm:p-5 shadow-2xl space-y-4 max-h-[92vh] flex flex-col overflow-y-auto custom-scroll">
+    <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-xl w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[92vh] flex flex-col overflow-y-auto custom-scroll">
       <div class="flex items-center justify-between pb-2 border-b border-white/10">
         <div>
           <h3 class="text-base font-black text-white flex items-center gap-2">
-            <span>🎯 Diretrizes Táticas de Balneário</span>
+            <span>📋 Estratégia de Balneário (6 Checkpoints)</span>
           </h3>
-          <p class="text-xs text-slate-400">Comportamento tático automático da equipa conforme o marcador do jogo.</p>
+          <p class="text-xs text-slate-400">Define as ordens pré-definidas da tua equipa para os 6 períodos de 15 minutos.</p>
         </div>
         <button onclick="closeTacticalGuidelinesModal()" class="text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
       </div>
 
       <div class="space-y-3 text-xs">
-        <!-- 1. Se Empatado -->
-        <div class="p-3 rounded-xl bg-black/30 border border-white/10 space-y-2">
-          <div class="flex items-center justify-between font-bold text-amber-400">
-            <span>⚖️ 1. Se o Jogo Estiver Empatado:</span>
-            <span class="text-[10px] text-slate-400 font-mono">Padrão Inicial</span>
+        <!-- Barra dos 6 Períodos no Modal -->
+        <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-bold">Período a Configurar:</span>
+            <span id="modal-period-display-name" class="font-mono text-emerald-400 font-bold">Início (00' - 15')</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
-              <select id="guide-tied-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="defensive">🛡️ Defesa</option>
-                <option value="balanced" selected>⚖️ Equilibrado</option>
-                <option value="attacking">⚔️ Ataque</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Pressão</label>
-              <select id="guide-tied-pressing" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="low">🐢 Baixa</option>
-                <option value="balanced" selected>⚖️ Média</option>
-                <option value="high">🔥 Alta</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Saída</label>
-              <select id="guide-tied-buildup" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="curta" selected>⚽ Curta</option>
-                <option value="flancos">🦅 Flancos</option>
-                <option value="longa">🚀 Longa</option>
-              </select>
-            </div>
+          <div class="grid grid-cols-6 gap-1.5" id="modal-timeline-periods-buttons">
+            <button type="button" onclick="selectViewingPeriod(0)" id="btn-per-mod-0" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-emerald-500 bg-emerald-950 text-emerald-300">00'</button>
+            <button type="button" onclick="selectViewingPeriod(1)" id="btn-per-mod-1" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">15'</button>
+            <button type="button" onclick="selectViewingPeriod(2)" id="btn-per-mod-2" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">30'</button>
+            <button type="button" onclick="selectViewingPeriod(3)" id="btn-per-mod-3" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">INT</button>
+            <button type="button" onclick="selectViewingPeriod(4)" id="btn-per-mod-4" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">60'</button>
+            <button type="button" onclick="selectViewingPeriod(5)" id="btn-per-mod-5" class="py-1.5 rounded-lg text-xs font-mono font-bold transition text-center border border-white/10 bg-slate-900 text-slate-400">75'</button>
           </div>
         </div>
 
-        <!-- 2. Se a Ganhar -->
-        <div class="p-3 rounded-xl bg-black/30 border border-white/10 space-y-2">
-          <div class="flex items-center justify-between font-bold text-emerald-400">
-            <span>🛡️ 2. Se a Minha Equipa Estiver a Ganhar:</span>
-            <span class="text-[10px] text-slate-400 font-mono">Gerir Vantagem</span>
+        <!-- Triângulo da Decisão no Modal -->
+        <div class="bg-black/30 p-3 rounded-xl border border-white/5 space-y-2.5">
+          <div class="flex justify-center">
+            <button type="button" onclick="applyTacticalChoice('tikitaka')" id="tac-btn-tikitaka-mod" class="tactical-triangle-btn w-full max-w-[260px] p-2.5 rounded-xl border border-white/10 bg-slate-900 text-left flex items-center justify-between shadow">
+              <div>
+                <div class="font-black text-xs text-white">🎯 Tiki-Taka (Posse Curta)</div>
+                <div class="text-[10px] text-slate-400">Equilib • Média • Curta</div>
+              </div>
+              <span class="text-[10px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Ganha 🛡️</span>
+            </button>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
-              <select id="guide-win-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="defensive" selected>🛡️ Defesa</option>
-                <option value="balanced">⚖️ Equilibrado</option>
-                <option value="attacking">⚔️ Ataque</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Pressão</label>
-              <select id="guide-win-pressing" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="low" selected>🐢 Baixa</option>
-                <option value="balanced">⚖️ Média</option>
-                <option value="high">🔥 Alta</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Saída</label>
-              <select id="guide-win-buildup" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="curta" selected>⚽ Curta</option>
-                <option value="flancos">🦅 Flancos</option>
-                <option value="longa">🚀 Longa</option>
-              </select>
-            </div>
+          <div class="flex items-center justify-between px-10 text-[10px] font-mono text-slate-400 font-bold select-none">
+            <span>↗️ ganha a</span>
+            <span>ganha a ↘️</span>
           </div>
-        </div>
-
-        <!-- 3. Se a Perder -->
-        <div class="p-3 rounded-xl bg-black/30 border border-white/10 space-y-2">
-          <div class="flex items-center justify-between font-bold text-rose-400">
-            <span>⚔️ 3. Se a Minha Equipa Estiver a Perder:</span>
-            <span class="text-[10px] text-slate-400 font-mono">Procurar Reviravolta</span>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" onclick="applyTacticalChoice('counter')" id="tac-btn-counter-mod" class="tactical-triangle-btn p-2.5 rounded-xl border border-white/10 bg-slate-900 text-left flex flex-col justify-between shadow">
+              <div>
+                <div class="font-black text-xs text-white">🛡️ Contra-Ataque</div>
+                <div class="text-[10px] text-slate-400">Defesa • Baixa • Longa</div>
+              </div>
+              <span class="text-[10px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🔥</span>
+            </button>
+            <button type="button" onclick="applyTacticalChoice('pressing')" id="tac-btn-pressing-mod" class="tactical-triangle-btn p-2.5 rounded-xl border border-white/10 bg-slate-900 text-left flex flex-col justify-between shadow">
+              <div>
+                <div class="font-black text-xs text-white">🔥 Pressão Total</div>
+                <div class="text-[10px] text-slate-400">Ataque • Alta • Flancos</div>
+              </div>
+              <span class="text-[10px] font-bold text-amber-300 font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit mt-1">Ganha 🎯</span>
+            </button>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Mentalidade</label>
-              <select id="guide-lose-mentality" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="defensive">🛡️ Defesa</option>
-                <option value="balanced">⚖️ Equilibrado</option>
-                <option value="attacking" selected>⚔️ Ataque</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Pressão</label>
-              <select id="guide-lose-pressing" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="low">🐢 Baixa</option>
-                <option value="balanced">⚖️ Média</option>
-                <option value="high" selected>🔥 Alta</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Saída</label>
-              <select id="guide-lose-buildup" class="w-full bg-slate-900 border border-white/10 rounded-lg p-1.5 text-slate-200 text-xs">
-                <option value="curta">⚽ Curta</option>
-                <option value="flancos" selected>🦅 Flancos</option>
-                <option value="longa">🚀 Longa</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Opção de Automação -->
-        <div class="flex items-center justify-between pt-2 border-t border-white/5">
-          <div>
-            <span class="font-bold text-white block">🤖 Piloto Automático Tático</span>
-            <span class="text-[10px] text-slate-400">Ajusta automaticamente a tática em campo após cada golo.</span>
-          </div>
-          <input type="checkbox" id="guide-auto-apply" checked class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
         </div>
       </div>
 
-      <div class="pt-2 border-t border-white/10 flex justify-end gap-2">
-        <button onclick="saveTacticalGuidelines()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">
-          Guardar Diretrizes
+      <div class="pt-2 border-t border-white/10 flex justify-between items-center text-xs">
+        <span class="text-slate-400 text-[11px]">Ordens salvas no clube para jogos automáticos e ao vivo.</span>
+        <button onclick="closeTacticalGuidelinesModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow">
+          💾 Concluir Balneário
         </button>
       </div>
     </div>
   </div>
-<!-- ========================================== -->
+
+  <!-- ========================================== -->
   <!-- MODAL DE CAMPEONATOS E LIGAS (ESTILO STRIKER) -->
   <!-- ========================================== -->
   <div id="leagues-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
