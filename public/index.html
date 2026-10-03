@@ -156,11 +156,11 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center justify-end">
-          <button onclick="startMatchView()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+        <div id="banner-match-actions" class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center justify-end">
+          <button onclick="startMatchView()" id="btn-play-match-pitch" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2">
             <span>⚽ Jogar no Relvado</span>
           </button>
-          <button onclick="simulateCurrentRoundInstantly()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5" title="Simular a jornada completa em 1 segundo">
+          <button onclick="simulateCurrentRoundInstantly()" id="btn-quick-sim" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5" title="Simular a jornada completa em 1 segundo">
             <span>⚡ Simulação Rápida</span>
           </button>
         </div>
@@ -521,6 +521,9 @@
             </button>
 
             <!-- Botão Diretrizes Táticas -->
+            <button onclick="openPlayerValuationModal()" class="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/30 transition flex items-center gap-1 shadow" title="Consultar Tabela Oficial de Idade x Nota">
+              <span>📊 Tabela Cotações</span>
+            </button>
             <button onclick="openTacticalGuidelinesModal()" class="px-3 py-1.5 bg-amber-600/30 hover:bg-amber-600 text-amber-200 hover:text-white rounded-xl text-xs font-bold border border-amber-500/30 transition flex items-center gap-1 shadow">
               <span>🎯 Diretrizes Balneário</span>
             </button>
@@ -604,6 +607,9 @@
 
           <div class="flex items-center gap-2">
             <!-- Botão Recalcular Novos Jogadores -->
+            <button onclick="openPlayerValuationModal()" class="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/40 transition flex items-center gap-1.5 shadow" title="Consultar Tabela Oficial de Idade x Nota">
+              <span>📊 Tabela de Valores (Idade x Nota)</span>
+            </button>
             <button onclick="refreshTransferMarket()" class="px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white rounded-xl text-xs font-bold border border-emerald-500/40 transition flex items-center gap-1.5 shadow">
               <span>🔄 Recalcular Novos Jogadores</span>
             </button>
@@ -850,13 +856,31 @@
       5: 5.0, 6: 10.0, 7: 20.0, 8: 40.0, 9: 80.0
     };
 
+    function getAgeMultiplier(age) {
+      if (age <= 18) return 1.25; // Promessa Jovem (+25%)
+      if (age === 19) return 1.20;
+      if (age === 20) return 1.15;
+      if (age === 21) return 1.10;
+      if (age >= 22 && age <= 28) return 1.00; // Auge da Carreira (100%)
+      if (age === 29) return 0.95;
+      if (age === 30) return 0.80; // Início do Declínio Gradual
+      if (age === 31) return 0.68;
+      if (age === 32) return 0.55;
+      if (age === 33) return 0.42;
+      if (age === 34) return 0.30;
+      if (age === 35) return 0.20;
+      if (age === 36) return 0.12;
+      if (age === 37) return 0.06;
+      if (age === 38) return 0.02;
+      return 0.0; // 39 anos ou mais: 0 M€ (Reforma Obrigatória)
+    }
+
     function calculateMarketValueNum(overall, age) {
-      const base = BASE_MARKET_TABLE[overall] || 5.0;
-      let mult = 1.0;
-      if (age <= 21) mult = 1.15;
-      else if (age >= 29 && age <= 32) mult = 0.90;
-      else if (age >= 33) mult = 0.75;
-      return Math.round(base * mult * 10) / 10;
+      if (age >= 39) return 0.0;
+      const base = BASE_MARKET_TABLE[overall] || (overall * 2.0);
+      const mult = getAgeMultiplier(age);
+      const val = Math.round(base * mult * 10) / 10;
+      return Math.max(0.0, val);
     }
 
     function calculateQPStars(overall, age, price) {
@@ -1331,6 +1355,21 @@
           : userLeagues[userLeagues.length - 1].id;
 
         setActiveLeague(activeIdToUse);
+        // Normalizar valores de mercado e reformar jogadores >= 40 se existirem de saves antigos
+        if (leagueState && leagueState.clubs) {
+          leagueState.clubs.forEach(c => {
+            [...c.starters, ...c.bench].forEach(p => {
+              if (p.age >= 39) {
+                p.age = Math.min(39, p.age); // Ajusta idade máxima
+                p.marketValueNum = 0.0;
+                p.marketValue = "0.0 M€";
+              } else {
+                p.marketValueNum = calculateMarketValueNum(p.overall, p.age);
+                p.marketValue = `${p.marketValueNum.toFixed(1)} M€`;
+              }
+            });
+          });
+        }
         updateTopLeagueNameBadge();
         updateAllLeagueUIs();
         populateClubCustomUI();
@@ -2345,6 +2384,33 @@
         document.getElementById('banner-round-num').innerText = leagueState.currentRound;
         document.getElementById('banner-fixture-venue').innerText = isHome ? "Em Casa" : "Fora de Casa";
         document.getElementById('banner-match-title').innerText = isHome ? `${userClub.name} vs ${oppClub.name}` : `${oppClub.name} vs ${userClub.name}`;
+
+        const matchActionsContainer = document.getElementById('banner-match-actions');
+        if (matchActionsContainer) {
+          if (userMatch.played) {
+            const nextRoundNum = leagueState.currentRound + 1;
+            const isLastRound = leagueState.currentRound >= 22;
+            matchActionsContainer.innerHTML = `
+              <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
+                <div class="px-3 py-2.5 bg-black/50 text-emerald-300 font-mono font-bold text-xs rounded-xl border border-emerald-500/30 flex items-center gap-1.5 shadow">
+                  <span>✅</span> <span>Jornada Disputada: <strong>${userMatch.homeScore} - ${userMatch.awayScore}</strong></span>
+                </div>
+                <button onclick="advanceToNextRoundOrEndSeason()" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-xl flex items-center justify-center gap-2">
+                  <span>${isLastRound ? '🏆 Encerrar Temporada' : `⏩ Avançar para Jornada ${nextRoundNum}`}</span>
+                </button>
+              </div>
+            `;
+          } else {
+            matchActionsContainer.innerHTML = `
+              <button onclick="startMatchView()" id="btn-play-match-pitch" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <span>⚽ Jogar no Relvado</span>
+              </button>
+              <button onclick="simulateCurrentRoundInstantly()" id="btn-quick-sim" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5" title="Simular a jornada completa em 1 segundo">
+                <span>⚡ Simulação Rápida</span>
+              </button>
+            `;
+          }
+        }
       }
 
       listEl.innerHTML = matches.map(m => {
@@ -2478,6 +2544,35 @@
         bench: aClub.bench
       };
 
+      // Se este jogo já foi disputado nesta jornada, bloqueia nova execução
+      if (match.played) {
+        minute = 90;
+        homeScore = match.homeScore;
+        awayScore = match.awayScore;
+        document.getElementById('match-status').innerText = `🏁 Concluído (${match.homeScore} - ${match.awayScore})`;
+        document.getElementById('score-home').innerText = match.homeScore;
+        document.getElementById('score-away').innerText = match.awayScore;
+        document.getElementById('match-minute').innerText = "90:00 • FINAL";
+
+        const btnStart = document.getElementById('btn-start');
+        if (btnStart) {
+          btnStart.innerHTML = "<span>✅ Jogo Gravado</span>";
+          btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        const dockBtn = document.getElementById('dock-btn-play');
+        if (dockBtn) {
+          dockBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          const dockText = document.getElementById('dock-play-text');
+          if (dockText) dockText.innerText = "Gravado";
+        }
+        document.getElementById('ft-score').innerText = `${match.homeScore} - ${match.awayScore}`;
+        document.getElementById('ft-receipts').innerText = "Resultado oficial final gravado no campeonato";
+        document.getElementById('fulltime-banner').classList.remove('hidden');
+      } else {
+        // Jogo por disputar
+        resetMatch();
+      }
+
       // Atualizar interface de dia de jogo (Placar)
       const badgeHome = document.getElementById('match-badge-home');
       if (badgeHome) {
@@ -2563,16 +2658,30 @@
       updateLeagueTableUI();
       renderCurrentRoundUI();
 
-      // Se a 22ª jornada terminou, fecha a temporada!
+      // 2. Se a 22ª jornada terminou, fecha a temporada!
       if (leagueState.currentRound >= 22) {
-        finishSeasonAndCelebrate();
-      } else {
-        leagueState.currentRound++;
-        viewingRound = leagueState.currentRound;
-        document.getElementById('top-round-number').innerText = `${leagueState.currentRound} / 22`;
+        saveCurrentGame(false);
+        updateLeagueTableUI();
         renderCurrentRoundUI();
-        switchTab('league');
+        finishSeasonAndCelebrate();
+        return;
       }
+
+      // 3. Avançar para a próxima jornada e GRAVAR IMEDIATAMENTE
+      leagueState.currentRound++;
+      viewingRound = leagueState.currentRound;
+      saveCurrentGame(false); // Garante que a nova jornada fica gravada na VPS e LocalStorage
+
+      document.getElementById('top-round-number').innerText = `${leagueState.currentRound} / 22`;
+      updateLeagueTableUI();
+      renderCurrentRoundUI();
+      updateAllLeagueUIs();
+      switchTab('league');
+      showSaveToast(`⚽ Jornada ${leagueState.currentRound - 1} gravada! A iniciar Jornada ${leagueState.currentRound}.`);
+    }
+
+    function advanceToNextRoundOrEndSeason() {
+      concludeMatchAndReturnToLeague();
     }
 
     function simulateCurrentRoundInstantly() {
@@ -2582,7 +2691,7 @@
       const userMatch = roundMatches.find(m => m.home === leagueState.userClubId || m.away === leagueState.userClubId);
       if (!userMatch) return;
       if (userMatch.played) {
-        concludeMatchAndReturnToLeague();
+        alert("⚠️ O jogo desta jornada já foi concluído e o resultado está gravado!\n\nClica em 'Avançar para a Próxima Jornada' para continuares o campeonato.");
         return;
       }
 
@@ -2647,18 +2756,91 @@
         prizeWon: `${prize.toFixed(1)} M€`
       });
 
-      // 3. Evolução dos Jovens (Promessas 18-21 anos sobem até +2 de nota!)
-      const allSquad = [...userClub.starters, ...userClub.bench];
-      allSquad.forEach(p => {
-        p.age++;
-        if (p.age <= 22 && Math.random() < 0.6) {
-          p.overall = Math.min(9, p.overall + 1);
+      // 3. ENVELHECIMENTO, EVOLUÇÃO, DECLÍNIO & REFORMA AOS 39 ANOS (TODAS AS EQUIPAS DA LIGA)
+      const retiredUserPlayers = [];
+      const promotedUserYouths = [];
+
+      leagueState.clubs.forEach(club => {
+        const isUser = (club.id === leagueState.userClubId);
+        const allPlayers = [...club.starters, ...club.bench];
+        const newStarters = [];
+        const newBench = [];
+
+        allPlayers.forEach(p => {
+          // 1. Envelhece 1 ano
+          p.age++;
+
+          // 2. Evolução de Jovens Promessas (<= 21 anos)
+          if (p.age <= 21 && Math.random() < 0.55) {
+            p.overall = Math.min(9, p.overall + 1);
+            p.tec = Math.min(9, (p.tec || p.overall) + 1);
+            p.fis = Math.min(9, (p.fis || p.overall) + 1);
+            p.dec = Math.min(9, (p.dec || p.overall) + 1);
+          }
+
+          // 3. Declínio a partir dos 30 anos (reduz valor e nota mesmo jogando)
+          if (p.age >= 30) {
+            let dropProb = 0.40;
+            if (p.age >= 33 && p.age <= 35) dropProb = 0.65;
+            if (p.age >= 36) dropProb = 1.00; // a partir dos 36 anos, perde nota garantidamente
+
+            if (Math.random() < dropProb && p.overall > 1) {
+              p.overall = Math.max(1, p.overall - 1);
+              p.tec = Math.max(1, (p.tec || p.overall) - 1);
+              p.fis = Math.max(1, (p.fis || p.overall) - 1);
+              p.dec = Math.max(1, (p.dec || p.overall) - 1);
+            }
+          }
+
+          p.effectiveOverall = p.overall;
           p.marketValueNum = calculateMarketValueNum(p.overall, p.age);
           p.marketValue = `${p.marketValueNum.toFixed(1)} M€`;
+
+          // 4. Reforma Obrigatória aos 39 Anos
+          if (p.age >= 39) {
+            if (isUser) {
+              retiredUserPlayers.push(`${p.name} (${p.pos}, Nota ${p.overall}, 39 anos)`);
+            }
+            // Promover um jovem da academia para a mesma posição para o clube não ficar desfalcado
+            const youthOverall = Math.floor(Math.random() * 2) + 4; // Nota 4 ou 5
+            const youth = createPlayer(
+              `acad_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              null,
+              p.pos,
+              youthOverall,
+              18
+            );
+            newBench.push(youth);
+            if (isUser) {
+              promotedUserYouths.push(`${youth.name} (${youth.pos}, Nota ${youth.overall}, 18 anos)`);
+            }
+          } else {
+            // O jogador continua no ativo
+            const isStarter = club.starters.some(s => s.id === p.id);
+            if (isStarter) {
+              newStarters.push(p);
+            } else {
+              newBench.push(p);
+            }
+          }
+        });
+
+        // Garantir que a equipa mantém 11 titulares caso algum se tenha reformado
+        while (newStarters.length < 11 && newBench.length > 0) {
+          newStarters.push(newBench.shift());
         }
+
+        club.starters = newStarters;
+        club.bench = newBench;
+        club.allPlayers = [...newStarters, ...newBench];
       });
 
-      alert(`🎉 FIM DA TEMPORADA ${leagueState.season}!\n\n🏆 Campeão: ${champion.name}\n📍 A tua posição: ${userPos}º Lugar (${userClub.points} Pts)\n💰 Prémio Conquistado: ${prize.toFixed(1)} M€!\n\nAvançando para a Temporada ${leagueState.season + 1}...`);
+      let retireSummary = "";
+      if (retiredUserPlayers.length > 0) {
+        retireSummary = `\n\n👟 REFORMAS AOS 39 ANOS (Penduraram as chuteiras):\n- ${retiredUserPlayers.join('\n- ')}\n\n⭐ PROMOVIDOS DA ACADEMIA (18 Anos):\n- ${promotedUserYouths.join('\n- ')}`;
+      }
+
+      alert(`🎉 FIM DA TEMPORADA ${leagueState.season}!\n\n🏆 Campeão: ${champion.name}\n📍 A tua posição: ${userPos}º Lugar (${userClub.points} Pts)\n💰 Prémio Conquistado: ${prize.toFixed(1)} M€!${retireSummary}\n\nAvançando para a Temporada ${leagueState.season + 1}...`);
 
       leagueState.season++;
       leagueState.currentRound = 1;
@@ -4398,6 +4580,10 @@ function setSquadFormation(formKey) {
     }
 
     function startOrResume() {
+      if (currentMatchObj && currentMatchObj.played && minute >= 90) {
+        alert("⚠️ Este jogo já terminou e o resultado oficial está gravado!\n\nNão pode ser repetido. Avança para a próxima jornada no menu do Campeonato.");
+        return;
+      }
       if (minute >= 90) resetMatch();
       if (isHalftimeActive) { resumeAfterHalftime(); return; }
       isRunning = true;
@@ -4454,6 +4640,16 @@ function setSquadFormation(formKey) {
     }
 
     // Comandos Táticos
+    function openPlayerValuationModal() {
+      const modal = document.getElementById('player-valuation-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePlayerValuationModal() {
+      const modal = document.getElementById('player-valuation-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function openTacticalGuidelinesModal() {
       document.getElementById('guide-tied-mentality').value = tacticalGuidelines.onTied.mentality;
       document.getElementById('guide-tied-pressing').value = tacticalGuidelines.onTied.pressing;
@@ -4676,7 +4872,137 @@ function setSquadFormation(formKey) {
       resizeCanvas();
     });
   </script>
-<!-- MODAL DE DIRETRIZES TÁTICAS PRÉ-DEFINIDAS (BALNEÁRIO) -->
+<!-- MODAL DE TABELA OFICIAL DE COTAÇÕES: IDADE X NOTA -->
+  <div id="player-valuation-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-4xl w-full p-3.5 sm:p-5 shadow-2xl space-y-3.5 max-h-[92vh] flex flex-col overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <div>
+          <h3 class="text-base font-black text-white flex items-center gap-2">
+            <span>📊 Tabela Oficial de Cotações: Idade x Nota de Jogador</span>
+          </h3>
+          <p class="text-xs text-slate-400">
+            Regra Oficial: A partir dos 30 anos os jogadores perdem valor gradualmente e reduzem nota. Aos 39 anos o valor atinge 0 M€ e o jogador reforma-se obrigatoriamente!
+          </p>
+        </div>
+        <button onclick="closePlayerValuationModal()" class="text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+      </div>
+
+      <!-- Tabela Matriz Idade x Nota -->
+      <div class="overflow-x-auto custom-scroll min-w-0 max-w-full rounded-xl border border-white/10">
+        <table class="w-full min-w-[620px] text-center text-xs">
+          <thead>
+            <tr class="bg-black/60 text-slate-300 font-mono text-[11px] border-b border-white/10">
+              <th class="py-2.5 px-3 text-left">Idade / Escalão</th>
+              <th class="py-2 px-1.5 text-slate-400">Mult.</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 1</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 2</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 3</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 4</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 5</th>
+              <th class="py-2 px-2 text-emerald-400 font-bold">Nota 6</th>
+              <th class="py-2 px-2 text-amber-400 font-bold">Nota 7</th>
+              <th class="py-2 px-2 text-amber-400 font-bold">Nota 8</th>
+              <th class="py-2 px-2 text-rose-400 font-black">Nota 9</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 font-mono text-[11px]">
+            <tr class="hover:bg-white/5 bg-emerald-950/20 text-emerald-300">
+              <td class="py-2 px-3 text-left font-bold font-sans">🌟 18 anos (Promessa)</td>
+              <td class="text-slate-400">+25%</td>
+              <td>0.4 M€</td><td>0.8 M€</td><td>1.3 M€</td><td>3.1 M€</td><td>6.3 M€</td><td>12.5 M€</td><td>25.0 M€</td><td>50.0 M€</td><td class="font-bold text-emerald-300">100.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 bg-emerald-950/10 text-emerald-200">
+              <td class="py-2 px-3 text-left font-sans">🌱 19 - 21 anos (Jovem)</td>
+              <td class="text-slate-400">+10% a +20%</td>
+              <td>0.3 M€</td><td>0.7 M€</td><td>1.2 M€</td><td>2.9 M€</td><td>5.8 M€</td><td>11.5 M€</td><td>23.0 M€</td><td>46.0 M€</td><td>92.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 bg-indigo-950/30 text-indigo-200 font-bold">
+              <td class="py-2 px-3 text-left font-sans">⚡ 22 - 28 anos (Auge)</td>
+              <td class="text-slate-400">100%</td>
+              <td>0.3 M€</td><td>0.6 M€</td><td>1.0 M€</td><td>2.5 M€</td><td>5.0 M€</td><td>10.0 M€</td><td>20.0 M€</td><td>40.0 M€</td><td class="text-indigo-300">80.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-slate-300">
+              <td class="py-2 px-3 text-left font-sans">🎯 29 anos (Maturidade)</td>
+              <td class="text-slate-400">95%</td>
+              <td>0.3 M€</td><td>0.6 M€</td><td>1.0 M€</td><td>2.4 M€</td><td>4.8 M€</td><td>9.5 M€</td><td>19.0 M€</td><td>38.0 M€</td><td>76.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 bg-amber-950/20 text-amber-300 font-semibold">
+              <td class="py-2 px-3 text-left font-sans">⚠️ 30 anos (Início Declínio)</td>
+              <td class="text-slate-400">80%</td>
+              <td>0.2 M€</td><td>0.5 M€</td><td>0.8 M€</td><td>2.0 M€</td><td>4.0 M€</td><td>8.0 M€</td><td>16.0 M€</td><td>32.0 M€</td><td>64.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-amber-200">
+              <td class="py-2 px-3 text-left font-sans">📉 31 anos</td>
+              <td class="text-slate-400">68%</td>
+              <td>0.2 M€</td><td>0.4 M€</td><td>0.7 M€</td><td>1.7 M€</td><td>3.4 M€</td><td>6.8 M€</td><td>13.6 M€</td><td>27.2 M€</td><td>54.4 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-amber-200">
+              <td class="py-2 px-3 text-left font-sans">📉 32 anos</td>
+              <td class="text-slate-400">55%</td>
+              <td>0.2 M€</td><td>0.3 M€</td><td>0.6 M€</td><td>1.4 M€</td><td>2.8 M€</td><td>5.5 M€</td><td>11.0 M€</td><td>22.0 M€</td><td>44.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-orange-300">
+              <td class="py-2 px-3 text-left font-sans">📉 33 anos</td>
+              <td class="text-slate-400">42%</td>
+              <td>0.1 M€</td><td>0.3 M€</td><td>0.4 M€</td><td>1.1 M€</td><td>2.1 M€</td><td>4.2 M€</td><td>8.4 M€</td><td>16.8 M€</td><td>33.6 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-orange-300">
+              <td class="py-2 px-3 text-left font-sans">📉 34 anos</td>
+              <td class="text-slate-400">30%</td>
+              <td>0.1 M€</td><td>0.2 M€</td><td>0.3 M€</td><td>0.8 M€</td><td>1.5 M€</td><td>3.0 M€</td><td>6.0 M€</td><td>12.0 M€</td><td>24.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-orange-400">
+              <td class="py-2 px-3 text-left font-sans">📉 35 anos</td>
+              <td class="text-slate-400">20%</td>
+              <td>0.1 M€</td><td>0.1 M€</td><td>0.2 M€</td><td>0.5 M€</td><td>1.0 M€</td><td>2.0 M€</td><td>4.0 M€</td><td>8.0 M€</td><td>16.0 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-rose-300">
+              <td class="py-2 px-3 text-left font-sans">👴 36 anos (Veterano)</td>
+              <td class="text-slate-400">12%</td>
+              <td>0.0 M€</td><td>0.1 M€</td><td>0.1 M€</td><td>0.3 M€</td><td>0.6 M€</td><td>1.2 M€</td><td>2.4 M€</td><td>4.8 M€</td><td>9.6 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-rose-300">
+              <td class="py-2 px-3 text-left font-sans">👴 37 anos</td>
+              <td class="text-slate-400">6%</td>
+              <td>0.0 M€</td><td>0.0 M€</td><td>0.1 M€</td><td>0.2 M€</td><td>0.3 M€</td><td>0.6 M€</td><td>1.2 M€</td><td>2.4 M€</td><td>4.8 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 text-rose-400">
+              <td class="py-2 px-3 text-left font-sans">👴 38 anos (Fim de Linha)</td>
+              <td class="text-slate-400">2%</td>
+              <td>0.0 M€</td><td>0.0 M€</td><td>0.0 M€</td><td>0.1 M€</td><td>0.1 M€</td><td>0.2 M€</td><td>0.4 M€</td><td>0.8 M€</td><td>1.6 M€</td>
+            </tr>
+            <tr class="hover:bg-white/5 bg-rose-950/40 text-rose-400 font-black">
+              <td class="py-2.5 px-3 text-left font-sans">👟 39 anos (Reforma Obrigatória)</td>
+              <td class="text-rose-300">0%</td>
+              <td colspan="9" class="text-center font-bold tracking-wider text-rose-300 bg-rose-950/60">
+                0.0 M€ • Pendura as chuteiras e é substituído por um jovem de 18 anos da Academia
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-xs text-slate-300 space-y-1">
+        <div class="font-bold text-amber-400 flex items-center gap-1.5">
+          <span>💡 Como Funciona o Sistema de Idade e Carreira:</span>
+        </div>
+        <ul class="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
+          <li><strong>Jovens (18-21 anos):</strong> Têm valor acrescido (+10% a +25%) e têm 55% de hipótese de subir 1 ponto de nota por época.</li>
+          <li><strong>Auge (22-28 anos):</strong> Mantêm 100% da cotação oficial da sua nota.</li>
+          <li><strong>A partir dos 30 anos:</strong> O valor de mercado desce progressivamente e há perda gradual de nota mesmo jogando titular.</li>
+          <li><strong>Aos 39 anos:</strong> O passe vale 0 M€ e no final da época retira-se obrigatoriamente. O clube recebe gratuitamente um jovem de 18 anos para a mesma posição.</li>
+        </ul>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-white/10">
+        <button onclick="closePlayerValuationModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE DIRETRIZES TÁTICAS PRÉ-DEFINIDAS (BALNEÁRIO) -->
   <div id="tactical-guidelines-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-[var(--card,#101927)] border border-[var(--border,#1e293b)] rounded-2xl max-w-xl w-full p-3.5 sm:p-5 shadow-2xl space-y-4 max-h-[92vh] flex flex-col overflow-y-auto custom-scroll">
       <div class="flex items-center justify-between pb-2 border-b border-white/10">
