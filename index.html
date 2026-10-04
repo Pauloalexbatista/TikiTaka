@@ -1963,6 +1963,22 @@
       const container = document.getElementById('leagues-container-list');
       if (!container) return;
 
+      if (userLeagues.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-400 bg-black/20 rounded-2xl border border-white/5 space-y-3">
+            <span class="text-4xl">🏟️</span>
+            <div class="font-bold text-white text-sm">Não tens nenhum campeonato ativo</div>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">Apagaste o campeonato anterior. Podes criar um novo campeonato oficial do zero ou entrar com o código de um amigo!</p>
+            <div class="pt-2 flex items-center justify-center gap-2">
+              <button onclick="openCreateLeagueView()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">
+                ➕ Criar Novo Campeonato
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       container.innerHTML = userLeagues.map(l => {
         const isActive = l.id === activeLeagueId;
         const borderClass = isActive 
@@ -2311,7 +2327,7 @@
       showSaveToast(`🏆 Campeonato Ativo: ${targetLeague.name} (${targetLeague.userClubName})`);
     }
 
-    function deleteLeagueAction(id) {
+    async function deleteLeagueAction(id) {
       const league = userLeagues.find(l => l.id === id);
       if (!league) return;
 
@@ -2319,20 +2335,40 @@
         return;
       }
 
-      userLeagues = userLeagues.filter(l => l.id !== id);
-
-      if (activeLeagueId === id) {
-        if (userLeagues.length > 0) {
-          activeLeagueId = userLeagues[0].id;
-          leagueState = userLeagues[0].leagueState;
-        } else {
-          loadMultiLeaguesSystem(); // Recria a liga padrão caso tenha apagado tudo
+      // 1. Apagar na VPS / Servidor Central
+      if (window.location.protocol.startsWith('http') && league.code) {
+        try {
+          await fetch(`/api/leagues/${encodeURIComponent(league.code)}`, {
+            method: 'DELETE'
+          });
+        } catch (e) {
+          console.warn("Aviso ao apagar na VPS:", e);
         }
       }
 
-      saveCurrentGame(false);
-      updateTopLeagueNameBadge();
-      updateAllLeagueUIs();
+      // 2. Remover localmente
+      userLeagues = userLeagues.filter(l => l.id !== id);
+
+      if (userLeagues.length > 0) {
+        activeLeagueId = userLeagues[0].id;
+        leagueState = userLeagues[0].leagueState;
+        try {
+          localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
+          localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+        } catch(e) {}
+        updateTopLeagueNameBadge();
+        updateAllLeagueUIs();
+      } else {
+        // Apagou o último campeonato: limpa os registos e não recria automaticamente
+        activeLeagueId = null;
+        try {
+          localStorage.removeItem(STORAGE_LEAGUES_KEY);
+          localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
+        } catch(e) {}
+        const topBadge = document.getElementById('top-league-name-btn');
+        if (topBadge) topBadge.innerText = "Sem Campeonato";
+      }
+
       renderLeaguesListUI();
       showLeagueModalAlert(`Campeonato "${league.name}" apagado com sucesso!`, "emerald");
     }

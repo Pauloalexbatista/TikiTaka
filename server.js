@@ -368,6 +368,23 @@ app.post('/api/leagues/:code/sync', (req, res) => {
   }
 });
 
+app.delete('/api/leagues/:code', (req, res) => {
+  try {
+    const cleanCode = req.params.code.trim().toUpperCase();
+    const db = loadDB();
+    if (db.leagues && db.leagues[cleanCode]) {
+      delete db.leagues[cleanCode];
+      saveDB(db);
+      console.log(`[LIGA] Apagada da VPS: ${cleanCode}`);
+      return res.json({ ok: true, message: 'Liga apagada com sucesso.' });
+    }
+    res.json({ ok: true, message: 'Liga já não constava na base de dados.' });
+  } catch (err) {
+    console.error('[API] Erro ao apagar liga:', err);
+    res.status(500).json({ ok: false, error: 'Erro ao apagar liga no servidor.' });
+  }
+});
+
 app.get('/api/backup', (req, res) => {
   const db = loadDB();
   res.setHeader('Content-Disposition', `attachment; filename="tikitaka_vps_backup_${Date.now()}.json"`);
