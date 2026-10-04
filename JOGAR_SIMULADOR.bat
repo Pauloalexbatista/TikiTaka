@@ -1,2 +1,3 @@
 @echo off
-start public\index.html
+start https://tikitaka.testeweb.site
+

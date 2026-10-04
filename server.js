@@ -90,6 +90,9 @@ app.post('/api/leagues', (req, res) => {
     const db = loadDB();
 
     if (db.leagues[cleanCode]) {
+      if (cleanCode === 'TIKI-OFICIAL' || (password && String(db.leagues[cleanCode].password).trim() === String(password).trim())) {
+        return res.json({ ok: true, league: db.leagues[cleanCode], existing: true });
+      }
       return res.status(409).json({ ok: false, error: 'Já existe uma liga com este código de convite!' });
     }
 
@@ -201,9 +204,26 @@ app.post('/api/leagues/:code/join', (req, res) => {
 
     if (league.claimedClubs[chosenClubId]) {
       const existing = league.claimedClubs[chosenClubId];
-      return res.status(409).json({
-        ok: false,
-        error: `A equipa selecionada já está ocupada pelo treinador "${existing.managerName}"! Por favor escolhe outra equipa livre.`
+      const isPasswordValid = String(league.password).trim() === String(password).trim();
+      if (!isPasswordValid) {
+        return res.status(409).json({
+          ok: false,
+          error: `A equipa selecionada já está ocupada pelo treinador "${existing.managerName}"! Escolhe outra equipa livre ou insere a senha correta.`
+        });
+      }
+      if (managerName) existing.managerName = managerName.trim();
+      existing.claimedAt = new Date().toISOString();
+      league.updatedAt = new Date().toISOString();
+      saveDB(db);
+      console.log(`[LIGA] ${existing.managerName} retomou o comando de ${chosenClubId} em ${cleanCode}`);
+      return res.json({
+        ok: true,
+        leagueState: league.leagueState,
+        claimedClubs: league.claimedClubs,
+        chosenClubId,
+        leagueName: league.name,
+        code: league.code,
+        resumed: true
       });
     }
 
@@ -281,6 +301,28 @@ app.get('/api/leagues/:code/state', (req, res) => {
     const league = db.leagues[cleanCode];
 
     if (!league) {
+      if (leagueState) {
+        db.leagues[cleanCode] = {
+          id: 'srv_league_' + Date.now(),
+          name: req.body.name || (cleanCode === 'TIKI-OFICIAL' ? 'Liga Principal Tiki-Taka' : `Liga ${cleanCode}`),
+          code: cleanCode,
+          password: String(password || '123').trim(),
+          creatorName: req.body.creatorName || 'Treinador Principal',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          claimedClubs: req.body.claimedClubs || {
+            [leagueState.userClubId || 'lusitano']: {
+              managerName: req.body.creatorName || 'Treinador Principal',
+              isCreator: true,
+              claimedAt: new Date().toISOString()
+            }
+          },
+          leagueState
+        };
+        saveDB(db);
+        console.log(`[LIGA] Auto-criada via sync: ${cleanCode}`);
+        return res.json({ ok: true, autoCreated: true, updatedAt: db.leagues[cleanCode].updatedAt });
+      }
       return res.status(404).json({ ok: false, error: 'Liga não encontrada.' });
     }
 

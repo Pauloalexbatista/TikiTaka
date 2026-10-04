@@ -1312,10 +1312,22 @@
               currentLeagueObj.claimedClubs = data.claimedClubs;
             }
 
-            saveCurrentGame(false);
+            currentLeagueObj.leagueState = JSON.parse(JSON.stringify(leagueState));
+            currentLeagueObj.season = leagueState.season;
+            currentLeagueObj.currentRound = leagueState.currentRound;
+            currentLeagueObj.lastSavedAt = new Date().toISOString();
+
+            try {
+              localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
+              localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+            } catch(e) {}
+
             updateLeagueTableUI();
             renderCurrentRoundUI();
-            if (showToast) showSaveToast("🔄 Liga Sincronizada com a VPS!");
+            updateTopLeagueNameBadge();
+            const topRoundEl = document.getElementById('top-round-number');
+            if (topRoundEl) topRoundEl.innerText = `${leagueState.currentRound} / 22`;
+            if (showToast) showSaveToast("🔄 Liga Sincronizada com o Servidor!");
           }
         } else {
           if (showToast) showSaveToast("⚠️ Não foi possível sincronizar com a VPS.");
@@ -1401,7 +1413,7 @@
       }
     }
 
-    function setupDefaultInitialLeague() {
+    async function setupDefaultInitialLeague() {
       const initialCode = "TIKI-OFICIAL";
       const freshState = createFreshLeagueState("Lusitano Ginásio", "lusitano");
       const defaultLeague = {
@@ -1432,9 +1444,51 @@
         localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
         localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
       } catch(e) {}
+
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          await fetch('/api/leagues', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: defaultLeague.name,
+              code: defaultLeague.code,
+              password: defaultLeague.password,
+              creatorName: defaultLeague.creatorName,
+              creatorClubId: 'lusitano',
+              customClubName: 'Lusitano Ginásio',
+              leagueState: freshState
+            })
+          });
+        } catch (e) {
+          console.warn("[Multiplayer] Erro ao registar liga inicial na VPS:", e);
+        }
+      }
     }
 
-    function loadMultiLeaguesSystem() {
+    let backgroundSyncInterval = null;
+    function startBackgroundSyncWorker() {
+      if (backgroundSyncInterval) return;
+      if (!window.location.protocol.startsWith('http')) return;
+
+      backgroundSyncInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          syncActiveLeagueWithVPS(false);
+        }
+      }, 10000);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          syncActiveLeagueWithVPS(false);
+        }
+      });
+
+      window.addEventListener('focus', () => {
+        syncActiveLeagueWithVPS(false);
+      });
+    }
+
+    async function loadMultiLeaguesSystem() {
       try {
         const storedLeagues = localStorage.getItem(STORAGE_LEAGUES_KEY);
         const storedActiveId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
@@ -1457,7 +1511,7 @@
         // Se veio por link de convite (?liga=CODIGO):
         if (inviteCode) {
           if (!userLeagues || userLeagues.length === 0) {
-            setupDefaultInitialLeague();
+            await setupDefaultInitialLeague();
           } else {
             const activeId = (storedActiveId && userLeagues.some(l => l.id === storedActiveId))
               ? storedActiveId
@@ -1469,19 +1523,106 @@
           setTimeout(() => {
             openJoinLeagueView(inviteCode.toUpperCase(), invitePass);
           }, 350);
+          startBackgroundSyncWorker();
           return;
         }
 
-        // Se NÃO há campeonatos guardados:
+        // Se estamos em HTTP (online na VPS):
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            const resp = await fetch('/api/leagues');
+            if (resp.ok) {
+              const data = await resp.json();
+              const serverLeagues = data.leagues || [];
+
+              if (serverLeagues.length > 0) {
+                // Existe pelo menos uma liga no servidor central
+                const primaryServerLeague = serverLeagues[0];
+
+                // Verificar se o utilizador já tem esta liga no seu localStorage local
+                const existingIdx = userLeagues.findIndex(l => l.code === primaryServerLeague.code);
+
+                if (existingIdx !== -1) {
+                  // O utilizador já tem esta liga: sincroniza o estado mais recente da VPS!
+                  activeLeagueId = userLeagues[existingIdx].id;
+                  setActiveLeague(activeLeagueId);
+                  await syncActiveLeagueWithVPS(false);
+                } else if (!userLeagues || userLeagues.length === 0) {
+                  // Primeiro acesso neste dispositivo (ex: telemóvel novo):
+                  // Puxar o estado completo da liga da VPS
+                  const stateResp = await fetch(`/api/leagues/${encodeURIComponent(primaryServerLeague.code)}/state`);
+                  if (stateResp.ok) {
+                    const stateData = await stateResp.json();
+                    if (stateData.leagueState) {
+                      const myClubId = stateData.leagueState.userClubId || 'lusitano';
+                      const claimed = stateData.claimedClubs || {};
+
+                      const newLeagueObj = {
+                        id: 'league_' + Date.now(),
+                        name: stateData.name || primaryServerLeague.name,
+                        code: primaryServerLeague.code,
+                        password: '123',
+                        isCreator: false,
+                        creatorName: stateData.creatorName || primaryServerLeague.creatorName || 'Treinador',
+                        createdAt: new Date().toISOString(),
+                        lastSavedAt: new Date().toISOString(),
+                        userClubId: myClubId,
+                        season: stateData.leagueState.season || 1,
+                        currentRound: stateData.leagueState.currentRound || 1,
+                        claimedClubs: claimed,
+                        leagueState: stateData.leagueState
+                      };
+
+                      const club = stateData.leagueState.clubs.find(c => c.id === myClubId);
+                      newLeagueObj.userClubName = club ? club.name : 'Lusitano Ginásio';
+                      newLeagueObj.userClubShort = club ? club.short : 'LUS';
+
+                      userLeagues = [newLeagueObj];
+                      activeLeagueId = newLeagueObj.id;
+                      leagueState = stateData.leagueState;
+                      leagueState.userClubId = myClubId;
+
+                      localStorage.setItem(STORAGE_LEAGUES_KEY, JSON.stringify(userLeagues));
+                      localStorage.setItem(STORAGE_ACTIVE_ID_KEY, activeLeagueId);
+                    }
+                  }
+                }
+              } else {
+                // Servidor está sem ligas: inicializar a liga oficial padrão na VPS!
+                if (!userLeagues || userLeagues.length === 0) {
+                  await setupDefaultInitialLeague();
+                } else {
+                  // Se o PC já tinha uma liga local, envia-a para o servidor
+                  const myActive = userLeagues.find(l => l.id === storedActiveId) || userLeagues[0];
+                  if (myActive && myActive.leagueState) {
+                    await fetch('/api/leagues', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: myActive.name,
+                        code: myActive.code,
+                        password: myActive.password || '123',
+                        creatorName: myActive.creatorName || 'Treinador Principal',
+                        creatorClubId: myActive.userClubId || 'lusitano',
+                        customClubName: myActive.userClubName,
+                        leagueState: myActive.leagueState
+                      })
+                    }).catch(() => {});
+                  }
+                }
+              }
+            }
+          } catch (netErr) {
+            console.warn("[Multiplayer] Erro ao consultar servidor:", netErr);
+          }
+        }
+
+        // Se após tudo ainda NÃO há campeonatos guardados:
         if (!userLeagues || userLeagues.length === 0) {
-          setupDefaultInitialLeague();
+          await setupDefaultInitialLeague();
           updateTopLeagueNameBadge();
           updateAllLeagueUIs();
-
-          setTimeout(() => {
-            openLeaguesModal();
-            showLeagueModalAlert("👋 Bem-vindo ao Tiki-Taka! Cria a tua equipa ou entra num campeonato.", "emerald");
-          }, 350);
+          startBackgroundSyncWorker();
           return;
         }
 
@@ -1491,12 +1632,13 @@
           : userLeagues[userLeagues.length - 1].id;
 
         setActiveLeague(activeIdToUse);
+
         // Normalizar valores de mercado e reformar jogadores >= 40 se existirem de saves antigos
         if (leagueState && leagueState.clubs) {
           leagueState.clubs.forEach(c => {
             [...c.starters, ...c.bench].forEach(p => {
               if (p.age >= 39) {
-                p.age = Math.min(39, p.age); // Ajusta idade máxima
+                p.age = Math.min(39, p.age);
                 p.marketValueNum = 0.0;
                 p.marketValue = "0.0 M€";
               } else {
@@ -1506,16 +1648,13 @@
             });
           });
         }
+
         updateTopLeagueNameBadge();
         updateAllLeagueUIs();
         populateClubCustomUI();
 
-        // Se o utilizador tem mais de 1 campeonato, abre o menu para escolher onde quer jogar
-        if (userLeagues.length > 1) {
-          setTimeout(() => {
-            openLeaguesModal();
-          }, 300);
-        }
+        // Iniciar sincronização contínua em segundo plano
+        startBackgroundSyncWorker();
 
       } catch (err) {
         console.error("Erro ao carregar sistema de ligas:", err);
