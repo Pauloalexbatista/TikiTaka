@@ -1675,6 +1675,11 @@
     }
 
     function closeLeaguesModal() {
+      if (!activeLeagueId || userLeagues.length === 0) {
+        showLeagueModalAlert("⚠️ Tens de criar um campeonato ou entrar num código para começar a jogar!", "amber");
+        openCreateLeagueView();
+        return;
+      }
       document.getElementById('leagues-modal').classList.add('hidden');
     }
 
@@ -2359,14 +2364,17 @@
         updateTopLeagueNameBadge();
         updateAllLeagueUIs();
       } else {
-        // Apagou o último campeonato: limpa os registos e não recria automaticamente
+        // Apagou o último campeonato: limpa os registos e abre logo a vista para criar um novo campeonato
         activeLeagueId = null;
         try {
           localStorage.removeItem(STORAGE_LEAGUES_KEY);
           localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
         } catch(e) {}
-        const topBadge = document.getElementById('top-league-name-btn');
-        if (topBadge) topBadge.innerText = "Sem Campeonato";
+        updateTopLeagueNameBadge();
+        updateAllLeagueUIs();
+        openCreateLeagueView();
+        showLeagueModalAlert(`Campeonato "${league.name}" apagado com sucesso! Cria o teu novo campeonato abaixo:`, "emerald");
+        return;
       }
 
       renderLeaguesListUI();
@@ -2396,7 +2404,67 @@
     }
 
     function updateAllLeagueUIs() {
-      const userClub = leagueState.clubs.find(c => c.id === leagueState.userClubId);
+      if (!activeLeagueId || userLeagues.length === 0) {
+        const topClubNameEl = document.getElementById('top-club-name');
+        if (topClubNameEl) topClubNameEl.innerText = "Sem Clube";
+        const topSeasonEl = document.getElementById('top-season-badge');
+        if (topSeasonEl) topSeasonEl.innerText = "SEM CAMPEONATO";
+        const topBudgetEl = document.getElementById('top-club-budget');
+        if (topBudgetEl) topBudgetEl.innerText = "0.0 M€";
+        const topRoundEl = document.getElementById('top-round-number');
+        if (topRoundEl) topRoundEl.innerText = "-- / 22";
+        const topBadge = document.getElementById('top-league-name-btn');
+        if (topBadge) topBadge.innerText = "Sem Campeonato";
+        const badge = document.getElementById('club-badge-logo');
+        if (badge) {
+          badge.innerText = "---";
+          badge.style.backgroundColor = "#334155";
+          badge.style.borderColor = "#1e293b";
+        }
+
+        const leagueView = document.getElementById('view-league');
+        if (leagueView) {
+          let emptyOverlay = document.getElementById('no-league-main-overlay');
+          if (!emptyOverlay) {
+            emptyOverlay = document.createElement('div');
+            emptyOverlay.id = 'no-league-main-overlay';
+            emptyOverlay.className = "p-8 sm:p-12 text-center bg-black/40 border border-white/10 rounded-3xl space-y-4 my-4 shadow-2xl";
+            emptyOverlay.innerHTML = `
+              <span class="text-5xl block animate-bounce">🏟️</span>
+              <h2 class="text-xl sm:text-2xl font-black text-white">Nenhum Campeonato Ativo</h2>
+              <p class="text-sm text-slate-400 max-w-md mx-auto">
+                Não tens nenhum campeonato selecionado no momento. Cria uma nova liga para começares a tua época como treinador ou entra num campeonato existente com código de convite!
+              </p>
+              <div class="flex items-center justify-center gap-3 pt-3 flex-wrap">
+                <button onclick="openCreateLeagueView(); openLeaguesModal();" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center gap-2">
+                  <span>➕</span> <span>Criar Campeonato</span>
+                </button>
+                <button onclick="openJoinLeagueView(); openLeaguesModal();" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center gap-2">
+                  <span>🔑</span> <span>Entrar com Código</span>
+                </button>
+              </div>
+            `;
+            leagueView.prepend(emptyOverlay);
+          }
+          emptyOverlay.classList.remove('hidden');
+
+          const banner = document.getElementById('banner-match-actions')?.parentElement;
+          if (banner) banner.classList.add('hidden');
+          const grid = document.querySelector('#view-league .grid.grid-cols-1.lg\\:grid-cols-12');
+          if (grid) grid.classList.add('hidden');
+        }
+        return;
+      }
+
+      // Se há campeonato ativo, restaurar a visibilidade
+      const emptyOverlay = document.getElementById('no-league-main-overlay');
+      if (emptyOverlay) emptyOverlay.classList.add('hidden');
+      const banner = document.getElementById('banner-match-actions')?.parentElement;
+      if (banner) banner.classList.remove('hidden');
+      const grid = document.querySelector('#view-league .grid.grid-cols-1.lg\\:grid-cols-12');
+      if (grid) grid.classList.remove('hidden');
+
+      const userClub = leagueState.clubs ? leagueState.clubs.find(c => c.id === leagueState.userClubId) : null;
       if (userClub) {
         const topClubNameEl = document.getElementById('top-club-name');
         if (topClubNameEl) topClubNameEl.innerText = userClub.name;
